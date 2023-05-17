@@ -13,7 +13,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-start_urls = ["https://produto.mercadolivre.com.br/MLB-2644395073-processador-intel-core-i7-10700-box-lga-1200-bx8070110700-_JM#position=11&search_layout=grid&type=item&tracking_id=a1976802-4bbe-4d4d-a00b-dfbda8b60ce9"]
+start_urls = [
+    "https://produto.mercadolivre.com.br/MLB-2644395073-processador-intel-core-i7-10700-box-lga-1200-bx8070110700-_JM#position=11&search_layout=grid&type=item&tracking_id=a1976802-4bbe-4d4d-a00b-dfbda8b60ce9"
+]
 
 
 csv_exists = os.path.isfile("/root/minio/dados-scrapy.csv")
@@ -53,9 +55,10 @@ class ProductSpider(scrapy.Spider):
 
         # Escreve as informações no arquivo CSV
         with open(
-            "/root/minio/dados-scrapy.csv", mode="a+" if csv_exists else "w+", newline=""
+            "/root/minio/dados-scrapy.csv",
+            mode="a+" if csv_exists else "w+",
+            newline="",
         ) as csv_file:
-            
             fieldnames = ["site", "link", "data", "hora", "valor"]
 
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
@@ -80,19 +83,18 @@ class ProductSpider(scrapy.Spider):
             )
 
         # Envia o arquivo CSV para o bucket do MinIO
-	# Envia o arquivo CSV para o bucket do MinIO
-	try:
-   		with open("dados-scrapy.csv", mode="rb") as csv_file:
-        		minio_client.put_object(
-            		"meu-bucket", "dados-scrapy.csv", csv_file, len(csv_file.read())
-        		)
-    		self.logger.info("Arquivo CSV enviado para o bucket com sucesso!")
+        try:
+            with open("dados-scrapy.csv", mode="rb") as csv_file:
+                minio_client.put_object(
+                    "meu-bucket", "dados-scrapy.csv", csv_file, len(csv_file.read())
+                )
+            self.logger.info("Arquivo CSV enviado para o bucket com sucesso!")
 
-	except ResponseError as err:
-    		self.logger.error(err)
- 
+        except ResponseError as err:
+            self.logger.error(err)
+
+
 if __name__ == "__main__":
-    
     start_time = time.time()
 
     # Configuração do cliente MinIO
@@ -111,14 +113,11 @@ if __name__ == "__main__":
     # Executa o spider
     process = CrawlerProcess()
     process.crawl(ProductSpider, start_urls=start_urls, minio_client=minio_client)
-    process.start()   
+    process.start()
 
     # Conecta ao banco de dados
     conn = psycopg2.connect(
-        host="localhost",
-        database="produtos",
-        user="admin",
-        password="admin"
+        host="localhost", database="produtos", user="admin", password="admin"
     )
 
     # Cria uma tabela chamada 'produtos'
@@ -146,7 +145,7 @@ if __name__ == "__main__":
                 INSERT INTO produtos (site, link, data, hora, valor)
                 VALUES (%s, %s, DATE %s, %s, %s)
                 """,
-                (row["site"], row["link"], row["data"], row["hora"], valor)
+                (row["site"], row["link"], row["data"], row["hora"], valor),
             )
         conn.commit()
 
