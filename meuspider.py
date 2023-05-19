@@ -6,6 +6,7 @@ import time
 from minio import Minio
 from scrapy.crawler import CrawlerProcess
 import psycopg2
+import io
 
 
 import warnings
@@ -87,8 +88,9 @@ class ProductSpider(scrapy.Spider):
                     csv_content = csv_file.read()
                     print("ENTREI NO CSV")
                     if len(csv_content) > 0:
+                        csv_io = io.BytesIO(csv_content)
                         minio_client.put_object(
-                            "meu-bucket", "dados-scrapy.csv", csv_content, len(csv_content)
+                            "meu-bucket", "dados-scrapy.csv", csv_io, len(csv_content)
                         )
                         self.logger.info("---------------Arquivo CSV enviado para o bucket com sucesso!---------------")
                     else: 
