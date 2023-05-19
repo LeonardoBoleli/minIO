@@ -91,7 +91,7 @@ class ProductSpider(scrapy.Spider):
             self.logger.info("Arquivo CSV enviado para o bucket com sucesso!")
 
         except Exception as err:
-            self.logger.error(err)
+            self.logger.error("ERROOO: ", err)
 
 
 if __name__ == "__main__":
