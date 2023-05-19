@@ -136,7 +136,7 @@ if __name__ == "__main__":
     conn.commit()
 
     # Insere os dados no banco de dados
-    with open("/root/minIO/dados-scrapy.csv", mode="r") as csv_file:
+    with open("dados-scrapy.csv", mode="r") as csv_file:
         csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
             valor = row["valor"].replace(",", ".")
