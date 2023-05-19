@@ -4,6 +4,7 @@ import os.path
 import scrapy
 import time
 from minio import Minio
+from minio.error import ResponseError
 from scrapy.crawler import CrawlerProcess
 import psycopg2
 
