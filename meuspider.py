@@ -81,21 +81,17 @@ class ProductSpider(scrapy.Spider):
                     "valor": preco_completo,
                 }
             )
-
-                    # Lê o conteúdo do arquivo CSV
-            with open("/root/minIO/dados-scrapy.csv", mode="rb") as csv_file:
-                csv_data = csv_file.read()
-
             # Envia o arquivo CSV para o bucket do MinIO
             try:
-                minio_client.put_object(
-                    "meu-bucket", "dados-scrapy.csv", csv_data, len(csv_data)
-                )
-                self.logger.info("Arquivo CSV enviado para o bucket com sucesso!")
+                with open("/root/minIO/dados-scrapy.csv", mode="rb") as csv_file:
+                    print("ENTREI NO CSV")
+                    minio_client.put_object(
+                        "meu-bucket", "dados-scrapy.csv", csv_file, len(csv_file.read())
+                    )
+                self.logger.info("---------------Arquivo CSV enviado para o bucket com sucesso!---------------")
 
             except Exception as err:
-                self.logger.error(err)
-
+                self.logger.error("ERRO: ", err)
 
 
 if __name__ == "__main__":
