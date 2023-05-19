@@ -55,7 +55,7 @@ class ProductSpider(scrapy.Spider):
 
         # Escreve as informações no arquivo CSV
         with open(
-            "/root/minIO/dados-scrapy.csv",
+            "dados-scrapy.csv",
             mode="a+" if csv_exists else "w+",
             newline="",
         ) as csv_file:
