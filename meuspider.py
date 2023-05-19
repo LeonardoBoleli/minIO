@@ -18,7 +18,7 @@ start_urls = [
 ]
 
 
-csv_exists = os.path.isfile("/root/minIO/dados-scrapy.csv")
+csv_exists = os.path.isfile("dados-scrapy.csv")
 print("CSV_EXISTS: ", csv_exists)
 
 
