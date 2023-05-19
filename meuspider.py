@@ -18,7 +18,7 @@ start_urls = [
 ]
 
 
-csv_exists = os.path.isfile("/root/minio/dados-scrapy.csv")
+csv_exists = os.path.isfile("/root/minIO/dados-scrapy.csv")
 print("CSV_EXISTS: ", csv_exists)
 
 
@@ -55,7 +55,7 @@ class ProductSpider(scrapy.Spider):
 
         # Escreve as informações no arquivo CSV
         with open(
-            "/root/minio/dados-scrapy.csv",
+            "/root/minIO/dados-scrapy.csv",
             mode="a+" if csv_exists else "w+",
             newline="",
         ) as csv_file:
@@ -84,9 +84,9 @@ class ProductSpider(scrapy.Spider):
 
         # Envia o arquivo CSV para o bucket do MinIO
         try:
-            with open("dados-scrapy.csv", mode="rb") as csv_file:
+            with open("/root/minIO/dados-scrapy.csv", mode="rb") as csv_file:
                 minio_client.put_object(
-                    "meu-bucket", "dados-scrapy.csv", csv_file, len(csv_file.read())
+                    "/root/minIO/meu-bucket", "dados-scrapy.csv", csv_file, len(csv_file.read())
                 )
             self.logger.info("Arquivo CSV enviado para o bucket com sucesso!")
 
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     conn.commit()
 
     # Insere os dados no banco de dados
-    with open("/root/minio/dados-scrapy.csv", mode="r") as csv_file:
+    with open("/root/minIO/dados-scrapy.csv", mode="r") as csv_file:
         csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
             valor = row["valor"].replace(",", ".")
