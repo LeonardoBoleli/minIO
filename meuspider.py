@@ -86,7 +86,7 @@ class ProductSpider(scrapy.Spider):
                 with open("dados-scrapy.csv", mode="rb") as csv_file:
                     print("ENTREI NO CSV")
                     minio_client.put_object(
-                        "meu-bucket", "/root/minIO/dados-scrapy.csv", csv_file, len(csv_file.read())
+                        "meu-bucket", "dados-scrapy.csv", csv_file, len(csv_file.read())
                     )
                 self.logger.info("---------------Arquivo CSV enviado para o bucket com sucesso!---------------")
 
