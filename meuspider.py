@@ -151,7 +151,8 @@ if __name__ == "__main__":
 
             # Converte a string da data para o formato "YYYY-MM-DD"
             data = datetime.datetime.strptime(data_str, "%d/%m/%Y").strftime("%Y-%m-%d")
-
+            print("DATA NO CSV: ", data_str)
+            print("DATA NOVO: ", data)
             # Insere os dados no banco de dados
             cur.execute(
                 """
