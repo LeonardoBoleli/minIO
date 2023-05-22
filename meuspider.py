@@ -146,12 +146,19 @@ if __name__ == "__main__":
         csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
             valor = row["valor"].replace(",", ".")
+            # Extrai a data do arquivo CSV
+            data_str = row["data"]
+
+            # Converte a string da data para o formato "YYYY-MM-DD"
+            data = datetime.strptime(data_str, "%d/%m/%Y").strftime("%Y-%m-%d")
+
+            # Insere os dados no banco de dados
             cur.execute(
                 """
                 INSERT INTO produtos (site, link, data, hora, valor)
                 VALUES (%s, %s, %s, %s, %s)
                 """,
-                (row["site"], row["link"], row["data"], row["hora"], valor),
+                (row["site"], row["link"], data, row["hora"], valor),
             )
         conn.commit()
 
