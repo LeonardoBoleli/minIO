@@ -150,7 +150,7 @@ if __name__ == "__main__":
             data_str = row["data"]
 
             # Converte a string da data para o formato "YYYY-MM-DD"
-            data = datetime.strptime(data_str, "%d/%m/%Y").strftime("%Y-%m-%d")
+            data = datetime.datetime.strptime(data_str, "%d/%m/%Y").strftime("%Y-%m-%d")
 
             # Insere os dados no banco de dados
             cur.execute(
