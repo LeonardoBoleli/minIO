@@ -44,7 +44,7 @@ class ProductSpider(scrapy.Spider):
             centavos_produto = response.css(
                 ".andes-money-amount__cents.andes-money-amount__cents--superscript-36::text"
             ).get()
-            preco_completo = preco_produto.replace(".", "") + "." + centavos_produto
+            preco_completo = str(preco_produto.replace(".", "") + "." + centavos_produto)
 
         # Pega a data e hora atual
         data = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -109,10 +109,11 @@ if __name__ == "__main__":
             link TEXT,
             data TEXT,
             hora TEXT,
-            valor DECIMAL(10, 2)
+            valor TEXT
         )
         """
     )
+
     conn.commit()
 
     # Lê o arquivo CSV diretamente do bucket
@@ -124,20 +125,20 @@ if __name__ == "__main__":
         csv_io = io.StringIO(csv_content)
         csv_reader = csv.DictReader(csv_io)
         for row in csv_reader:
-            valor = float(row["valor"])
-            
             # Insere os dados no banco de dados
             cur.execute(
                 """
                 INSERT INTO produtos (site, link, data, hora, valor)
                 VALUES (%s, %s, %s, %s, %s)
                 """,
-                (row["site"], row["link"], row["data"], row["hora"], valor),
+                (row["site"], row["link"], row["data"], row["hora"], row["valor"]),
             )
+
         conn.commit()
         print("Dados do arquivo CSV inseridos no banco de dados com sucesso!")
     except Exception as err:
         print("Erro ao ler o arquivo CSV do bucket:", err)
+
 
     # Fecha a conexão com o banco de dados
     cur.close()
