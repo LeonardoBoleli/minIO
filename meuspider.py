@@ -85,7 +85,7 @@ class ProductSpider(scrapy.Spider):
                     csv_content = csv_file.read()
                     if len(csv_content) > 0:
                         minio_client.put_object(
-                            bucket_name, "dados-scrapy.csv", csv_file, len(csv_content)
+                            bucket_name, "dados-scrapy.csv", io.BytesIO(csv_content), len(csv_content)
                         )
                         self.logger.info("Arquivo CSV enviado para o bucket com sucesso!")
                     else:
@@ -138,24 +138,24 @@ if __name__ == "__main__":
 
     # Lê o arquivo CSV diretamente do bucket
     try:
-        csv_content = minio_client.get_object(bucket_name, "dados-scrapy.csv").read()
-        csv_io = io.BytesIO(csv_content.decode("utf-8"))
+        csv_object = minio_client.get_object(bucket_name, "dados-scrapy.csv")
+        csv_content = csv_object.data.decode("utf-8")
 
         # Insere os dados no banco de dados
-        with io.TextIOWrapper(csv_io, encoding="utf-8") as csv_file:
-            csv_reader = csv.DictReader(csv_file)
-            for row in csv_reader:
-                valor = row["valor"].replace(",", ".")
-                
-                # Insere os dados no banco de dados
-                cur.execute(
-                    """
-                    INSERT INTO produtos (site, link, data, hora, valor)
-                    VALUES (%s, %s, %s, %s, %s)
-                    """,
-                    (row["site"], row["link"], row["data"], row["hora"], valor),
-                )
-            conn.commit()
+        csv_io = io.StringIO(csv_content)
+        csv_reader = csv.DictReader(csv_io)
+        for row in csv_reader:
+            valor = row["valor"].replace(",", ".")
+            
+            # Insere os dados no banco de dados
+            cur.execute(
+                """
+                INSERT INTO produtos (site, link, data, hora, valor)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (row["site"], row["link"], row["data"], row["hora"], valor),
+            )
+        conn.commit()
     except Exception as err:
         print("Erro ao ler o arquivo CSV do bucket:", err)
 
