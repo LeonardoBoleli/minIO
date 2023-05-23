@@ -44,7 +44,7 @@ class ProductSpider(scrapy.Spider):
             centavos_produto = response.css(
                 ".andes-money-amount__cents.andes-money-amount__cents--superscript-36::text"
             ).get()
-            preco_completo = preco_produto.replace(".", "") + "," + centavos_produto
+            preco_completo = preco_produto.replace(".", "") + "." + centavos_produto
 
         # Pega a data e hora atual
         data = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -58,7 +58,7 @@ class ProductSpider(scrapy.Spider):
         cur.execute(
             """
             INSERT INTO produtos (site, link, data, hora, valor)
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s::DECIMAL)
             """,
             (site, response.url, data, hora, preco_completo),
         )
@@ -123,7 +123,7 @@ if __name__ == "__main__":
             link TEXT,
             data TEXT,
             hora TEXT,
-            valor NUMERIC(10,2)
+            valor DECIMAL(10, 2)
         )
         """
     )
@@ -144,7 +144,7 @@ if __name__ == "__main__":
             cur.execute(
                 """
                 INSERT INTO produtos (site, link, data, hora, valor)
-                VALUES (%s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s::DECIMAL)
                 """,
                 (row["site"], row["link"], row["data"], row["hora"], valor),
             )
@@ -159,11 +159,5 @@ if __name__ == "__main__":
     end_time = time.time()
 
     # Calcula o tempo total de execução
-    total_time = end_time - start_time
-    print(f"Tempo total de execução: {total_time} segundos")
-
-
-    end_time = time.time()
-
     total_time = end_time - start_time
     print(f"Tempo total de execução: {total_time} segundos")
