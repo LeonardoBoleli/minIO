@@ -1,12 +1,9 @@
 import csv
 import datetime
-import os.path
-import scrapy
 import time
 import psycopg2
 import io
 from minio import Minio
-from scrapy.crawler import CrawlerProcess
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -15,12 +12,8 @@ start_urls = [
     "https://produto.mercadolivre.com.br/MLB-2644395073-processador-intel-core-i7-10700-box-lga-1200-bx8070110700-_JM#position=11&search_layout=grid&type=item&tracking_id=a1976802-4bbe-4d4d-a00b-dfbda8b60ce9"
 ]
 
-csv_path = "/root/minIO/dados-scrapy.csv"
 bucket_name = "meu-bucket"
-
-csv_exists = os.path.isfile(csv_path)
-print("CSV_EXISTS:", csv_exists)
-
+csv_file_path = "dados-scrapy.csv"
 
 class ProductSpider(scrapy.Spider):
     name = "product_spider"
@@ -53,65 +46,61 @@ class ProductSpider(scrapy.Spider):
         data = datetime.datetime.now().strftime("%Y-%m-%d")
         hora = datetime.datetime.now().strftime("%H:%M:%S")
 
-        # Escreve as informações no arquivo CSV
-        with open(
-            csv_path,
-            mode="a+" if csv_exists else "w+",
-            newline="",
-        ) as csv_file:
-            fieldnames = ["site", "link", "data", "hora", "valor"]
+        # Envia as informações para o banco de dados
+        conn = psycopg2.connect(
+            host="localhost", database="produtos", user="admin", password="admin"
+        )
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO produtos (site, link, data, hora, valor)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (site, response.url, data, hora, preco_completo),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
 
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-
-            # Escreve o cabeçalho do arquivo CSV se ele não existir
-            csv_file.seek(0)
-            first_char = csv_file.read(1)
-            if not csv_exists or not first_char:
-                writer.writeheader()
-
-            writer.writerow(
-                {
-                    "site": site,
-                    "link": response.url,
-                    "data": data,
-                    "hora": hora,
-                    "valor": preco_completo,
-                }
+        # Envia as informações para o arquivo CSV no bucket
+        minio_client = Minio(
+            endpoint="localhost:9000",
+            access_key="minioadmin",
+            secret_key="minioadmin",
+            secure=False,
+        )
+        try:
+            if not minio_client.bucket_exists(bucket_name):
+                minio_client.make_bucket(bucket_name)
+            
+            # Lê o arquivo CSV do bucket, se existir
+            csv_data = ""
+            if minio_client.bucket_exists(bucket_name):
+                try:
+                    obj = minio_client.get_object(bucket_name, csv_file_path)
+                    csv_data = obj.data.decode("utf-8")
+                except Exception as e:
+                    print("Erro ao ler o arquivo CSV do bucket:", e)
+            
+            # Atualiza o conteúdo do arquivo CSV com as novas informações
+            csv_data += f"{site},{response.url},{data},{hora},{preco_completo}\n"
+            
+            # Envia o arquivo CSV atualizado para o bucket
+            minio_client.put_object(
+                bucket_name,
+                csv_file_path,
+                io.BytesIO(csv_data.encode("utf-8")),
+                len(csv_data),
+                content_type="text/csv"
             )
-
-            # Envia o arquivo CSV para o bucket do MinIO
-            try:
-                with open("/root/minIO/dados-scrapy.csv", mode="rb") as csv_file:
-                    minio_client.put_object(
-                        "meu-bucket",
-                        "dados-scrapy.csv",
-                        csv_file,
-                        length=os.stat("/root/minIO/dados-scrapy.csv").st_size,
-                        content_type="text/csv",
-                    )
-                    self.logger.info("Arquivo CSV enviado para o bucket com sucesso!")
-            except Exception as err:
-                self.logger.error("Erro ao enviar o arquivo CSV para o bucket:", err)
-
+            print("Arquivo CSV atualizado no bucket com sucesso!")
+        except Exception as e:
+            print("Erro ao enviar o arquivo CSV para o bucket:", e)
 
 
 if __name__ == "__main__":
     start_time = time.time()
 
-    # Configuração do cliente MinIO
-    minio_client = Minio(
-        endpoint="localhost:9000",
-        access_key="minioadmin",
-        secret_key="minioadmin",
-        secure=False,
-    )
-
-    # Configuração do logging do Scrapy
-    from scrapy.utils.log import configure_logging
-
-    configure_logging()
-
-    # Executa o spider
     process = CrawlerProcess()
     process.crawl(ProductSpider, start_urls=start_urls)
     process.start()
@@ -166,5 +155,11 @@ if __name__ == "__main__":
     end_time = time.time()
 
     # Calcula o tempo total de execução
+    total_time = end_time - start_time
+    print(f"Tempo total de execução: {total_time} segundos")
+
+
+    end_time = time.time()
+
     total_time = end_time - start_time
     print(f"Tempo total de execução: {total_time} segundos")
