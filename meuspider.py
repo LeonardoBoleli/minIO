@@ -1,11 +1,14 @@
 import csv
 import datetime
+import os.path
+import scrapy
 import time
 import psycopg2
 import io
 from minio import Minio
+from scrapy.crawler import CrawlerProcess
+from scrapy.utils.project import get_project_settings
 import warnings
-import scrapy
 
 warnings.filterwarnings("ignore")
 
