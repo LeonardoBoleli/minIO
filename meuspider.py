@@ -3,24 +3,23 @@ import datetime
 import os.path
 import scrapy
 import time
-from minio import Minio
-from scrapy.crawler import CrawlerProcess
 import psycopg2
 import io
-
-
+from minio import Minio
+from scrapy.crawler import CrawlerProcess
 import warnings
 
 warnings.filterwarnings("ignore")
-
 
 start_urls = [
     "https://produto.mercadolivre.com.br/MLB-2644395073-processador-intel-core-i7-10700-box-lga-1200-bx8070110700-_JM#position=11&search_layout=grid&type=item&tracking_id=a1976802-4bbe-4d4d-a00b-dfbda8b60ce9"
 ]
 
+csv_path = "/root/minIO/dados-scrapy.csv"
+bucket_name = "meu-bucket"
 
-csv_exists = os.path.isfile("/root/minIO/dados-scrapy.csv")
-print("CSV_EXISTS: ", csv_exists)
+csv_exists = os.path.isfile(csv_path)
+print("CSV_EXISTS:", csv_exists)
 
 
 class ProductSpider(scrapy.Spider):
@@ -56,7 +55,7 @@ class ProductSpider(scrapy.Spider):
 
         # Escreve as informações no arquivo CSV
         with open(
-            "/root/minIO/dados-scrapy.csv",
+            csv_path,
             mode="a+" if csv_exists else "w+",
             newline="",
         ) as csv_file:
@@ -66,11 +65,8 @@ class ProductSpider(scrapy.Spider):
 
             # Escreve o cabeçalho do arquivo CSV se ele não existir
             csv_file.seek(0)
-
             first_char = csv_file.read(1)
-            if not csv_exists:
-                writer.writeheader()
-            if not first_char:
+            if not csv_exists or not first_char:
                 writer.writeheader()
 
             writer.writerow(
@@ -82,22 +78,21 @@ class ProductSpider(scrapy.Spider):
                     "valor": preco_completo,
                 }
             )
+
             # Envia o arquivo CSV para o bucket do MinIO
             try:
-                with open("/root/minIO/dados-scrapy.csv", mode="rb") as csv_file:
+                with open(csv_path, mode="rb") as csv_file:
                     csv_content = csv_file.read()
-                    print("ENTREI NO CSV")
                     if len(csv_content) > 0:
-                        csv_io = io.BytesIO(csv_content)
                         minio_client.put_object(
-                            "meu-bucket", "/root/minIO/dados-scrapy.csv", csv_io, len(csv_content)
+                            bucket_name, "dados-scrapy.csv", csv_file, len(csv_content)
                         )
-                        self.logger.info("---------------Arquivo CSV enviado para o bucket com sucesso!---------------")
-                    else: 
+                        self.logger.info("Arquivo CSV enviado para o bucket com sucesso!")
+                    else:
                         self.logger.error("O arquivo CSV está vazio!")
 
             except Exception as err:
-                self.logger.error("ERRO: ", err)
+                self.logger.error("Erro ao enviar o arquivo CSV para o bucket:", err)
 
 
 if __name__ == "__main__":
@@ -118,7 +113,7 @@ if __name__ == "__main__":
 
     # Executa o spider
     process = CrawlerProcess()
-    process.crawl(ProductSpider, start_urls=start_urls, minio_client=minio_client)
+    process.crawl(ProductSpider, start_urls=start_urls)
     process.start()
 
     # Conecta ao banco de dados
@@ -133,35 +128,36 @@ if __name__ == "__main__":
         CREATE TABLE IF NOT EXISTS produtos (
             site TEXT,
             link TEXT,
-            data DATE,
-            hora TIME,
+            data TEXT,
+            hora TEXT,
             valor NUMERIC(10,2)
         )
         """
     )
     conn.commit()
 
-    # Insere os dados no banco de dados
-    with open("/root/minIO/dados-scrapy.csv", mode="r") as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        for row in csv_reader:
-            valor = row["valor"].replace(",", ".")
-            # Extrai a data do arquivo CSV
-            data_str = row["data"]
+    # Lê o arquivo CSV diretamente do bucket
+    try:
+        csv_content = minio_client.get_object(bucket_name, "dados-scrapy.csv").read()
+        csv_io = io.BytesIO(csv_content.decode("utf-8"))
 
-            # Converte a string da data para o formato "YYYY-MM-DD"
-            data = datetime.datetime.strptime(data_str, "%d/%m/%Y").strftime("%Y-%m-%d")
-            print("DATA NO CSV: ", data_str)
-            print("DATA NOVO: ", data)
-            # Insere os dados no banco de dados
-            cur.execute(
-                """
-                INSERT INTO produtos (site, link, data, hora, valor)
-                VALUES (%s, %s, %s, %s, %s)
-                """,
-                (row["site"], row["link"], data, row["hora"], valor),
-            )
-        conn.commit()
+        # Insere os dados no banco de dados
+        with io.TextIOWrapper(csv_io, encoding="utf-8") as csv_file:
+            csv_reader = csv.DictReader(csv_file)
+            for row in csv_reader:
+                valor = row["valor"].replace(",", ".")
+                
+                # Insere os dados no banco de dados
+                cur.execute(
+                    """
+                    INSERT INTO produtos (site, link, data, hora, valor)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    (row["site"], row["link"], row["data"], row["hora"], valor),
+                )
+            conn.commit()
+    except Exception as err:
+        print("Erro ao ler o arquivo CSV do bucket:", err)
 
     # Fecha a conexão com o banco de dados
     cur.close()
