@@ -50,22 +50,6 @@ class ProductSpider(scrapy.Spider):
         data = datetime.datetime.now().strftime("%Y-%m-%d")
         hora = datetime.datetime.now().strftime("%H:%M:%S")
 
-        # Envia as informações para o banco de dados
-        conn = psycopg2.connect(
-            host="localhost", database="produtos", user="admin", password="admin"
-        )
-        cur = conn.cursor()
-        cur.execute(
-            """
-            INSERT INTO produtos (site, link, data, hora, valor)
-            VALUES (%s, %s, %s, %s, %s::DECIMAL)
-            """,
-            (site, response.url, data, hora, preco_completo),
-        )
-        conn.commit()
-        cur.close()
-        conn.close()
-
         # Envia as informações para o arquivo CSV no bucket
         try:
             if not minio_client.bucket_exists(bucket_name):
