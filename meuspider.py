@@ -97,7 +97,7 @@ if __name__ == "__main__":
             link TEXT,
             data TEXT,
             hora TEXT,
-            valor DECIMAL(10,2)
+            valor DECIMAL(10, 2)
         )
         """
     )
@@ -117,24 +117,25 @@ if __name__ == "__main__":
 
     # Lê o arquivo CSV diretamente do bucket
     try:
-        csv_object = minio_client.get_object(bucket_name, "dados-scrapy.csv")
+        csv_object = minio_client.get_object(bucket_name, csv_file_path)
         csv_content = csv_object.data.decode("utf-8")
 
         # Insere os dados no banco de dados
         csv_io = io.StringIO(csv_content)
         csv_reader = csv.DictReader(csv_io)
         for row in csv_reader:
-            valor = row["valor"].replace(",", ".")
+            valor = float(row["valor"].replace(".", "").replace(",", "."))
             
             # Insere os dados no banco de dados
             cur.execute(
                 """
                 INSERT INTO produtos (site, link, data, hora, valor)
-                VALUES (%s, %s, %s, %s, %s::DECIMAL)
+                VALUES (%s, %s, %s, %s, %s)
                 """,
                 (row["site"], row["link"], row["data"], row["hora"], valor),
             )
         conn.commit()
+        print("Dados do arquivo CSV inseridos no banco de dados com sucesso!")
     except Exception as err:
         print("Erro ao ler o arquivo CSV do bucket:", err)
 
