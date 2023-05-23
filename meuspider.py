@@ -67,12 +67,6 @@ class ProductSpider(scrapy.Spider):
         conn.close()
 
         # Envia as informações para o arquivo CSV no bucket
-        minio_client = Minio(
-            endpoint="localhost:9000",
-            access_key="minioadmin",
-            secret_key="minioadmin",
-            secure=False,
-        )
         try:
             if not minio_client.bucket_exists(bucket_name):
                 minio_client.make_bucket(bucket_name)
@@ -105,10 +99,6 @@ class ProductSpider(scrapy.Spider):
 if __name__ == "__main__":
     start_time = time.time()
 
-    process = CrawlerProcess()
-    process.crawl(ProductSpider, start_urls=start_urls)
-    process.start()
-
     # Conecta ao banco de dados
     conn = psycopg2.connect(
         host="localhost", database="produtos", user="admin", password="admin"
@@ -123,11 +113,23 @@ if __name__ == "__main__":
             link TEXT,
             data TEXT,
             hora TEXT,
-            valor DECIMAL(10, 2)
+            valor DECIMAL(10,2)
         )
         """
     )
     conn.commit()
+
+    # Cria o cliente Minio
+    minio_client = Minio(
+        endpoint="localhost:9000",
+        access_key="minioadmin",
+        secret_key="minioadmin",
+        secure=False,
+    )
+
+    process = CrawlerProcess()
+    process.crawl(ProductSpider, start_urls=start_urls)
+    process.start()
 
     # Lê o arquivo CSV diretamente do bucket
     try:
