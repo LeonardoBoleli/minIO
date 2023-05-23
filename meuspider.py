@@ -5,6 +5,7 @@ import psycopg2
 import io
 from minio import Minio
 import warnings
+import scrapy
 
 warnings.filterwarnings("ignore")
 
