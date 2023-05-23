@@ -124,7 +124,7 @@ if __name__ == "__main__":
         csv_io = io.StringIO(csv_content)
         csv_reader = csv.DictReader(csv_io)
         for row in csv_reader:
-            valor = float(row["valor"].replace(".", "").replace(",", "."))
+            valor = float(row["valor"])
             
             # Insere os dados no banco de dados
             cur.execute(
@@ -138,6 +138,7 @@ if __name__ == "__main__":
         print("Dados do arquivo CSV inseridos no banco de dados com sucesso!")
     except Exception as err:
         print("Erro ao ler o arquivo CSV do bucket:", err)
+
 
     # Fecha a conexão com o banco de dados
     cur.close()
