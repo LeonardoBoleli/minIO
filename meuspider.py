@@ -160,6 +160,9 @@ if __name__ == "__main__":
     conn.commit()
 
     # Lê o arquivo CSV diretamente do bucket
+    print("Lendo arquivo CSV do bucket:", bucket_name, csv_file_path)
+    obj = minio_client.get_object(bucket_name, csv_file_path)
+
     try:
         time.sleep(1)
         csv_object = minio_client.get_object(bucket_name, csv_file_path)
