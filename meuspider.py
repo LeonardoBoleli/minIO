@@ -168,9 +168,11 @@ if __name__ == "__main__":
         csv_reader = csv.DictReader(csv_io)
 
         for row in csv_reader:
+            site = row["site"]
             link = row["link"]
             data = row["data"]
             hora = row["hora"]
+            valor = row["valor"]
 
             # Verifica se a linha já existe na tabela utilizando a data e hora como filtro
             cur.execute(
@@ -182,13 +184,14 @@ if __name__ == "__main__":
             if result[0] == 0:
                 cur.execute(
                     "INSERT INTO produtos (site, link, data, hora, valor) VALUES (%s, %s, %s, %s, %s)",
-                    (row["site"], row["link"], data, hora, row["valor"]),
+                    (site, link, data, hora, valor),
                 )
 
         conn.commit()
         print("Dados inseridos no banco de dados com sucesso!")
     except Exception as e:
         print("Erro ao ler o arquivo CSV do bucket:", e)
+
 
     # Fecha a conexão com o banco de dados
     cur.close()
