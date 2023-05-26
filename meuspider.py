@@ -98,11 +98,13 @@ class ProductSpider(scrapy.Spider):
                     updated_data.extend(self.collected_data[len(updated_data):])
 
                 csv_io = io.StringIO()
-                fieldnames = ["site", "link", "data", "hora", "valor"]
+                fieldnames = ["index", "site", "link", "data", "hora", "valor"]
                 writer = csv.DictWriter(csv_io, fieldnames=fieldnames)
 
                 writer.writeheader()
-                writer.writerows(updated_data)
+                for index, data in enumerate(updated_data):
+                    data["index"] = index
+                    writer.writerow(data)
 
                 csv_data = csv_io.getvalue()
 
@@ -117,6 +119,7 @@ class ProductSpider(scrapy.Spider):
                 print("Arquivo CSV atualizado no bucket com sucesso!")
             except Exception as e:
                 print("Erro ao enviar o arquivo CSV para o bucket:", e)
+
 
 
 if __name__ == "__main__":
