@@ -117,6 +117,7 @@ class ProductSpider(scrapy.Spider):
                     content_type="text/csv"
                 )
                 print("Arquivo CSV atualizado no bucket com sucesso!")
+                time.sleep(1)
             except Exception as e:
                 print("Erro ao enviar o arquivo CSV para o bucket:", e)
 
@@ -160,6 +161,7 @@ if __name__ == "__main__":
 
     # Lê o arquivo CSV diretamente do bucket
     try:
+        time.sleep(1)
         csv_object = minio_client.get_object(bucket_name, csv_file_path)
         csv_content = csv_object.data.decode("utf-8")
 
@@ -183,7 +185,7 @@ if __name__ == "__main__":
 
             if result[0] == 0:
                 cur.execute(
-                    "INSERT INTO produtos (site, link, data, hora, valor) VALUES (%s, %s, %s, %s, %s)",
+                    "INSERT INTO produtos (site, link, dat  a, hora, valor) VALUES (%s, %s, %s, %s, %s)",
                     (site, link, data, hora, valor),
                 )
 
