@@ -59,7 +59,7 @@ class ProductSpider(scrapy.Spider):
         try:
             if not minio_client.bucket_exists(bucket_name):
                 minio_client.make_bucket(bucket_name)
-
+            
             # Lê o arquivo CSV do bucket, se existir
             csv_data = ""
             if minio_client.bucket_exists(bucket_name):
@@ -68,10 +68,10 @@ class ProductSpider(scrapy.Spider):
                     csv_data = obj.data.decode("utf-8")
                 except Exception as e:
                     print("Erro ao ler o arquivo CSV do bucket:", e)
-
+            
             # Atualiza o conteúdo do arquivo CSV com as novas informações
             csv_data += f"{site},{response.url},{data},{hora},{preco_completo}\n"
-
+            
             # Envia o arquivo CSV atualizado para o bucket
             minio_client.put_object(
                 bucket_name,
@@ -105,7 +105,7 @@ if __name__ == "__main__":
         host="localhost", database="produtos", user="admin", password="admin"
     )
 
-    # Cria uma tabela chamada 'produtos'
+    # Cria uma tabela chamada 'produtos' com os atributos de cada coluna
     cur = conn.cursor()
     cur.execute(
         """
@@ -134,37 +134,27 @@ if __name__ == "__main__":
             link = row["link"]
             data = row["data"]
             hora = row["hora"]
-
-            # Verifica se a linha já existe na tabela utilizando a data e hora como critério
+            
+            # Verifica se a linha já existe na tabela utilizando a data e hora como filtro
             cur.execute(
-                """
-                SELECT COUNT(*) FROM produtos WHERE link = %s AND data = %s AND hora = %s
-                """,
-                (link, data, hora),
+                "SELECT COUNT(*) FROM produtos WHERE data = %s AND hora = %s",
+                (data, hora),
             )
-            count = cur.fetchone()[0]
+            result = cur.fetchone()
 
-            if count == 0:
-                # Insere os dados no banco de dados
+            if result[0] == 0:
                 cur.execute(
-                    """
-                    INSERT INTO produtos (site, link, data, hora, valor)
-                    VALUES (%s, %s, %s, %s, %s)
-                    """,
-                    (row["site"], link, data, hora, row["valor"]),
+                    "INSERT INTO produtos (site, link, data, hora, valor) VALUES (%s, %s, %s, %s, %s)",
+                    (row["site"], row["link"], data, hora, row["valor"]),
                 )
 
         conn.commit()
-        print("Dados do arquivo CSV inseridos no banco de dados com sucesso!")
-    except Exception as err:
-        print("Erro ao ler o arquivo CSV do bucket:", err)
+        print("Dados inseridos no banco de dados com sucesso!")
+    except Exception as e:
+        print("Erro ao ler o arquivo CSV do bucket:", e)
 
     # Fecha a conexão com o banco de dados
     cur.close()
     conn.close()
 
-    end_time = time.time()
-
-    # Calcula o tempo total de execução
-    total_time = end_time - start_time
-    print(f"Tempo total de execução: {total_time} segundos")
+    print("Tempo de execução: %.2f segundos" % (time.time() - start_time))
