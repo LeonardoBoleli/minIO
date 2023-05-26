@@ -124,20 +124,36 @@ if __name__ == "__main__":
         # Insere os dados no banco de dados
         csv_io = io.StringIO(csv_content)
         csv_reader = csv.DictReader(csv_io)
+
         for row in csv_reader:
-            # Insere os dados no banco de dados
+            link = row["link"]
+            data = row["data"]
+            hora = row["hora"]
+            
+            # Verifica se a linha já existe na tabela utilizando a data e hora como critério
             cur.execute(
                 """
-                INSERT INTO produtos (site, link, data, hora, valor)
-                VALUES (%s, %s, %s, %s, %s)
+                SELECT COUNT(*) FROM produtos WHERE link = %s AND data = %s AND hora = %s
                 """,
-                (row["site"], row["link"], row["data"], row["hora"], row["valor"]),
+                (link, data, hora),
             )
+            count = cur.fetchone()[0]
+            
+            if count == 0:
+                # Insere os dados no banco de dados
+                cur.execute(
+                    """
+                    INSERT INTO produtos (site, link, data, hora, valor)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    (row["site"], link, data, hora, row["valor"]),
+                )
 
         conn.commit()
         print("Dados do arquivo CSV inseridos no banco de dados com sucesso!")
     except Exception as err:
         print("Erro ao ler o arquivo CSV do bucket:", err)
+
 
 
     # Fecha a conexão com o banco de dados
