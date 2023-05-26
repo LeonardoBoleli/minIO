@@ -32,13 +32,14 @@ class ProductSpider(scrapy.Spider):
         self.start_urls = kwargs.get("start_urls", [])
 
     def start_requests(self):
-        for url in self.start_urls:
+        for index, url in enumerate(self.start_urls):
             yield scrapy.Request(
                 url=url,
                 callback=self.parse,
                 headers={
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
                 },
+                meta={"index": index}
             )
 
     def parse(self, response):
@@ -59,7 +60,7 @@ class ProductSpider(scrapy.Spider):
         try:
             if not minio_client.bucket_exists(bucket_name):
                 minio_client.make_bucket(bucket_name)
-            
+
             # Lê o arquivo CSV do bucket, se existir
             csv_data = ""
             if minio_client.bucket_exists(bucket_name):
@@ -68,10 +69,13 @@ class ProductSpider(scrapy.Spider):
                     csv_data = obj.data.decode("utf-8")
                 except Exception as e:
                     print("Erro ao ler o arquivo CSV do bucket:", e)
-            
+
             # Atualiza o conteúdo do arquivo CSV com as novas informações
-            csv_data += f"{site},{response.url},{data},{hora},{preco_completo}\n"
-            
+            csv_lines = csv_data.strip().split("\n")
+            csv_lines.pop(0)  # Remove o cabeçalho
+            csv_lines.insert(response.meta["index"], f"{site},{response.url},{data},{hora},{preco_completo}")
+            csv_data = "\n".join(csv_lines)
+
             # Envia o arquivo CSV atualizado para o bucket
             minio_client.put_object(
                 bucket_name,
@@ -134,7 +138,7 @@ if __name__ == "__main__":
             link = row["link"]
             data = row["data"]
             hora = row["hora"]
-            
+
             # Verifica se a linha já existe na tabela utilizando a data e hora como filtro
             cur.execute(
                 "SELECT COUNT(*) FROM produtos WHERE data = %s AND hora = %s",
