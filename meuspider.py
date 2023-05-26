@@ -30,6 +30,7 @@ class ProductSpider(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super(ProductSpider, self).__init__(*args, **kwargs)
         self.start_urls = kwargs.get("start_urls", [])
+        self.collected_data = []
 
     def start_requests(self):
         for index, url in enumerate(self.start_urls):
@@ -56,42 +57,66 @@ class ProductSpider(scrapy.Spider):
             else:
                 preco_completo = preco_produto
 
-
-        # Pega a data e hora atual
-        data = datetime.datetime.now().strftime("%Y-%m-%d")
-        hora = datetime.datetime.now().strftime("%H:%M:%S")
-
-        # Envia as informações para o arquivo CSV no bucket
-        try:
-            if not minio_client.bucket_exists(bucket_name):
-                minio_client.make_bucket(bucket_name)
-
-            # Lê o arquivo CSV do bucket, se existir
-            csv_data = ""
-            if minio_client.bucket_exists(bucket_name):
-                try:
-                    obj = minio_client.get_object(bucket_name, csv_file_path)
-                    csv_data = obj.data.decode("utf-8")
-                except Exception as e:
-                    print("Erro ao ler o arquivo CSV do bucket:", e)
-
-            # Atualiza o conteúdo do arquivo CSV com as novas informações
-            csv_lines = csv_data.strip().split("\n")
-            csv_lines.pop(0)  # Remove o cabeçalho
-            csv_lines.insert(response.meta["index"], f"{site},{response.url},{data},{hora},{preco_completo}")
-            csv_data = "\n".join(csv_lines)
-
-            # Envia o arquivo CSV atualizado para o bucket
-            minio_client.put_object(
-                bucket_name,
-                csv_file_path,
-                io.BytesIO(csv_data.encode("utf-8")),
-                len(csv_data),
-                content_type="text/csv"
+            self.collected_data.append(
+                {
+                    "site": site,
+                    "link": response.url,
+                    "data": datetime.datetime.now().strftime("%Y-%m-%d"),
+                    "hora": datetime.datetime.now().strftime("%H:%M:%S"),
+                    "valor": preco_completo,
+                }
             )
-            print("Arquivo CSV atualizado no bucket com sucesso!")
-        except Exception as e:
-            print("Erro ao enviar o arquivo CSV para o bucket:", e)
+
+    def closed(self, reason):
+        if reason == "finished":
+            try:
+                if not minio_client.bucket_exists(bucket_name):
+                    minio_client.make_bucket(bucket_name)
+
+                # Lê o arquivo CSV do bucket, se existir
+                csv_data = ""
+                if minio_client.bucket_exists(bucket_name):
+                    try:
+                        obj = minio_client.get_object(bucket_name, csv_file_path)
+                        csv_data = obj.data.decode("utf-8")
+                    except Exception as e:
+                        print("Erro ao ler o arquivo CSV do bucket:", e)
+
+                # Atualiza o conteúdo do arquivo CSV com as novas informações
+                csv_io = io.StringIO(csv_data)
+                csv_reader = csv.DictReader(csv_io)
+
+                updated_data = []
+                for row in csv_reader:
+                    index = int(row["index"])
+                    if index < len(self.collected_data):
+                        updated_data.append(self.collected_data[index])
+                    else:
+                        updated_data.append(row)
+
+                if len(self.collected_data) > len(updated_data):
+                    updated_data.extend(self.collected_data[len(updated_data):])
+
+                csv_io = io.StringIO()
+                fieldnames = ["site", "link", "data", "hora", "valor"]
+                writer = csv.DictWriter(csv_io, fieldnames=fieldnames)
+
+                writer.writeheader()
+                writer.writerows(updated_data)
+
+                csv_data = csv_io.getvalue()
+
+                # Envia o arquivo CSV atualizado para o bucket
+                minio_client.put_object(
+                    bucket_name,
+                    csv_file_path,
+                    io.BytesIO(csv_data.encode("utf-8")),
+                    len(csv_data),
+                    content_type="text/csv"
+                )
+                print("Arquivo CSV atualizado no bucket com sucesso!")
+            except Exception as e:
+                print("Erro ao enviar o arquivo CSV para o bucket:", e)
 
 
 if __name__ == "__main__":
