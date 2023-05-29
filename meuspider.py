@@ -117,7 +117,7 @@ if __name__ == "__main__":
 
         for row in csv_reader:
             # Insere os dados no banco de dados
-            link = row["link"]
+            link = row["URL"]
             data = row["data"]
             hora = row["hora"]
             print("Cheguei aqui 9")
