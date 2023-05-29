@@ -36,10 +36,8 @@ class ProductSpider(scrapy.Spider):
             )
     def parse(self, response):
         site = ""
-        print("Cheguei aqui")
         if "mercadolivre.com.br" in response.url:
             site = "Mercado Livre"
-            print("Cheguei aqui 2")
             preco_produto = response.css(".andes-money-amount__fraction::text").get()
             centavos_produto = response.css(
                 ".andes-money-amount__cents.andes-money-amount__cents--superscript-36::text"
@@ -48,7 +46,6 @@ class ProductSpider(scrapy.Spider):
                 preco_completo = f"{preco_produto}.{centavos_produto}"
             else:
                 preco_completo = f"{preco_produto}.00"
-            print("Cheguei aqui 3")
 
         # Pega a data e hora atual
         data = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -56,7 +53,6 @@ class ProductSpider(scrapy.Spider):
         # Envia as informações para o arquivo CSV no bucket
         try:
             if not minio_client.bucket_exists(bucket_name):
-                print("Cheguei aqui 4")
                 minio_client.make_bucket(bucket_name)
             
             # Lê o arquivo CSV do bucket, se existir
@@ -64,7 +60,6 @@ class ProductSpider(scrapy.Spider):
             if minio_client.bucket_exists(bucket_name):
                 try:
                     obj = minio_client.get_object(bucket_name, csv_file_path)
-                    print("Cheguei aqui 5")
                     csv_data = obj.data.decode("utf-8")
                 except Exception as e:
                     print("Erro ao ler o arquivo CSV do bucket:", e)
@@ -99,7 +94,6 @@ if __name__ == "__main__":
     conn = psycopg2.connect(
         host="localhost", database="produtos", user="admin", password="admin"
     )
-    print("Cheguei aqui 6")
     # Cria uma tabela chamada 'produtos'
     cur = conn.cursor()
     cur.execute(
@@ -116,19 +110,20 @@ if __name__ == "__main__":
     conn.commit()
     # Lê o arquivo CSV diretamente do bucket
     try:
-        print("Cheguei aqui 7")
         csv_object = minio_client.get_object(bucket_name, csv_file_path)
         csv_content = csv_object.data.decode("utf-8")
         # Insere os dados no banco de dados
         csv_io = io.StringIO(csv_content)
         csv_reader = csv.DictReader(csv_io)
-        print("Cheguei aqui 8")
 
         for row in csv_reader:
             # Insere os dados no banco de dados
             link = row.get("link")
             data = row.get("data")
             hora = row.get("hora")
+            print("link: ", link)
+            print("link: ", data)
+            print("link: ", hora)
 
             if link and data and hora:
                 # Verifica se a linha já existe na tabela utilizando a URL, data e hora como critério
