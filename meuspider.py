@@ -117,36 +117,33 @@ if __name__ == "__main__":
 
         for row in csv_reader:
             # Insere os dados no banco de dados
-            link = row["URL"]
-            data = row["data"]
-            hora = row["hora"]
-            print("Cheguei aqui 9")
+            link = row.get("link")
+            data = row.get("data")
+            hora = row.get("hora")
 
-            # Verifica se a linha já existe na tabela utilizando a data e hora como critério
-            cur.execute(
-                """
-                INSERT INTO produtos (site, link, data, hora, valor)
-                VALUES (%s, %s, %s, %s, %s)
-                SELECT COUNT(*) FROM produtos WHERE link = %s AND data = %s AND hora = %s
-                """,
-                (row["site"], row["link"], row["data"], row["hora"], row["valor"]),
-                (link, data, hora),
-            )
-            count = cur.fetchone()[0]
-            print("Cheguei aqui 10")
-
-            if count == 0:
-                # Insere os dados no banco de dados
+            if link and data and hora:
+                # Verifica se a linha já existe na tabela utilizando a URL, data e hora como critério
                 cur.execute(
                     """
-                    INSERT INTO produtos (site, link, data, hora, valor)
-                    VALUES (%s, %s, %s, %s, %s)
+                    SELECT COUNT(*) FROM produtos WHERE link = %s AND data = %s AND hora = %s
                     """,
-                    (row["site"], link, data, hora, row["valor"]),
+                    (link, data, hora),
                 )
-        print("Cheguei aqui 11")
+                count = cur.fetchone()[0]
+
+                if count == 0:
+                    # Insere os dados no banco de dados
+                    cur.execute(
+                        """
+                        INSERT INTO produtos (site, link, data, hora, valor)
+                        VALUES (%s, %s, %s, %s, %s)
+                        """,
+                        (row["site"], link, data, hora, row["valor"]),
+                    )
+
         conn.commit()
         print("Dados do arquivo CSV inseridos no banco de dados com sucesso!")
+
     except Exception as err:
         print("Erro ao ler o arquivo CSV do bucket:", err)
 
