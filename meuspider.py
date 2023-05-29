@@ -111,10 +111,15 @@ if __name__ == "__main__":
 
     # Lê o arquivo CSV diretamente do bucket
     try:
-        csv_object = minio_client.get_object(bucket_name, csv_file_path)
-        csv_content = csv_object.data.decode("utf-8")
-        # Insere os dados no banco de dados
-        csv_io = io.StringIO(csv_content)
+        csv_data = ""
+        if minio_client.bucket_exists(bucket_name):
+            try:
+                obj = minio_client.get_object(bucket_name, csv_file_path)
+                csv_data = obj.data.decode("utf-8")
+            except Exception as e:
+                print("Erro ao ler o arquivo CSV do bucket:", e)
+
+        csv_io = io.StringIO(csv_data)
         csv_reader = csv.DictReader(csv_io)
 
         for row in csv_reader:
@@ -135,6 +140,7 @@ if __name__ == "__main__":
                     (link, data, hora),
                 )
                 count = cur.fetchone()[0]
+                print("count: ", count)
 
                 if count == 0:
                     # Insere os dados no banco de dados
@@ -143,14 +149,15 @@ if __name__ == "__main__":
                         INSERT INTO produtos (site, link, data, hora, valor)
                         VALUES (%s, %s, %s, %s, %s)
                         """,
-                        (row["site"], link, data, hora, row["valor"]),
+                        (row.get("site"), link, data, hora, row.get("valor")),
                     )
+                    print("Dados inseridos:", link, data, hora)
 
         conn.commit()
         print("Dados do arquivo CSV inseridos no banco de dados com sucesso!")
-
     except Exception as err:
         print("Erro ao ler o arquivo CSV do bucket:", err)
+
 
 
 
