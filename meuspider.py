@@ -147,7 +147,7 @@ if __name__ == "__main__":
             cur.execute(
                 """
                 INSERT INTO produtos (site, link, data, hora, valor)
-                VALUES (%s, %s, DATE %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s)
                 """,
                 (row["site"], row["link"], row["data"], row["hora"], valor),
             )
