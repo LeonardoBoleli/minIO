@@ -3,26 +3,24 @@ import datetime
 import os.path
 import scrapy
 import time
-import psycopg2
-import io
 from minio import Minio
 from scrapy.crawler import CrawlerProcess
-from scrapy.utils.project import get_project_settings
+import psycopg2
+
+
 import warnings
 
 warnings.filterwarnings("ignore")
 
+
 start_urls = [
     "https://produto.mercadolivre.com.br/MLB-2644395073-processador-intel-core-i7-10700-box-lga-1200-bx8070110700-_JM#position=11&search_layout=grid&type=item&tracking_id=a1976802-4bbe-4d4d-a00b-dfbda8b60ce9"
-    #"https://www.mercadolivre.com.br/gabinete-gamer-lian-li-redragon-modelo-o11dynamic-mini-branc/p/MLB23190291?pdp_filters=category:MLB1696#searchVariation=MLB23190291&position=2&search_layout=grid&type=product&tracking_id=dab59008-df8b-46f0-bd34-2f8053eca38f",
-    #"https://www.mercadolivre.com.br/placa-de-video-nvidia-galax-geforce-rtx-30-series-rtx-3060-36nsl8md6occ-oc-edition-8gb/p/MLB20736337?pdp_filters=category:MLB1658#searchVariation=MLB20736337&position=3&search_layout=grid&type=product&tracking_id=d3ba3a55-4cda-4a8e-8f88-fd6382009246",
-    #"https://produto.mercadolivre.com.br/MLB-1676543787-placa-me-asus-tuf-b460m-plus-b460-lga1200-ddr4-10a-ger-_JM#position=25&search_layout=grid&type=item&tracking_id=6f6be4a6-644a-43c2-8e5b-285259d18b1e",
-    #"https://www.mercadolivre.com.br/memoria-ram-fury-color-preto-16gb-1-hyperx-hx426c16fb16/p/MLB14728888?pdp_filters=category:MLB1694#searchVariation=MLB14728888&position=8&search_layout=grid&type=product&tracking_id=b0b0bebf-c99d-42c0-b721-f62d1a64d3a1",
-    #"https://produto.mercadolivre.com.br/MLB-3381940936-water-cooler-corsair-h100-rgb-240mm-radiator-preto-_JM#position=6&search_layout=grid&type=item&tracking_id=137704c3-2bb1-4abe-8809-bd43e8c8f05d"
 ]
 
-bucket_name = "meu-bucket"
-csv_file_path = "dados-scrapy.csv"
+
+csv_exists = os.path.isfile("dados-scrapy.csv")
+print("CSV_EXISTS: ", csv_exists)
+
 
 class ProductSpider(scrapy.Spider):
     name = "product_spider"
@@ -30,17 +28,15 @@ class ProductSpider(scrapy.Spider):
     def __init__(self, *args, **kwargs):
         super(ProductSpider, self).__init__(*args, **kwargs)
         self.start_urls = kwargs.get("start_urls", [])
-        self.collected_data = []
 
     def start_requests(self):
-        for index, url in enumerate(self.start_urls):
+        for url in self.start_urls:
             yield scrapy.Request(
                 url=url,
                 callback=self.parse,
                 headers={
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
                 },
-                meta={"index": index}
             )
 
     def parse(self, response):
@@ -51,82 +47,61 @@ class ProductSpider(scrapy.Spider):
             centavos_produto = response.css(
                 ".andes-money-amount__cents.andes-money-amount__cents--superscript-36::text"
             ).get()
+            preco_completo = preco_produto.replace(".", "") + "," + centavos_produto
 
-            if centavos_produto is not None:
-                preco_completo = str(preco_produto.replace(".", "") + "." + centavos_produto)
-            else:
-                preco_completo = preco_produto
+        # Pega a data e hora atual
+        data = datetime.datetime.now().strftime("%Y-%m-%d")
+        hora = datetime.datetime.now().strftime("%H:%M:%S")
 
-            self.collected_data.append(
+        # Escreve as informações no arquivo CSV
+        with open(
+            "dados-scrapy.csv",
+            mode="a+" if csv_exists else "w+",
+            newline="",
+        ) as csv_file:
+            fieldnames = ["site", "link", "data", "hora", "valor"]
+
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+
+            # Escreve o cabeçalho do arquivo CSV se ele não existir
+            csv_file.seek(0)
+
+            first_char = csv_file.read(1)
+            if not csv_exists:
+                writer.writeheader()
+            if not first_char:
+                writer.writeheader()
+
+            writer.writerow(
                 {
                     "site": site,
                     "link": response.url,
-                    "data": datetime.datetime.now().strftime("%Y-%m-%d"),
-                    "hora": datetime.datetime.now().strftime("%H:%M:%S"),
+                    "data": data,
+                    "hora": hora,
                     "valor": preco_completo,
                 }
             )
-
-    def closed(self, reason):
-        if reason == "finished":
+            # Envia o arquivo CSV para o bucket do MinIO
             try:
-                if not minio_client.bucket_exists(bucket_name):
-                    minio_client.make_bucket(bucket_name)
+                with open("dados-scrapy.csv", mode="rb") as csv_file:
+                    csv_content = csv_file.read()
+                    print("ENTREI NO CSV")
+                    if len(csv_content) > 0:
+                        minio_client.put_object(
+                            "meu-bucket", "dados-scrapy.csv", csv_content, len(csv_content)
+                        )
+                        self.logger.info("---------------Arquivo CSV enviado para o bucket com sucesso!---------------")
+                    else: 
+                        self.logger.error("O arquivo CSV está vazio!")
 
-                # Lê o arquivo CSV do bucket, se existir
-                csv_data = ""
-                if minio_client.bucket_exists(bucket_name):
-                    try:
-                        obj = minio_client.get_object(bucket_name, csv_file_path)
-                        csv_data = obj.data.decode("utf-8")
-                    except Exception as e:
-                        print("Erro ao ler o arquivo CSV do bucket:", e)
-
-                # Atualiza o conteúdo do arquivo CSV com as novas informações
-                csv_io = io.StringIO(csv_data)
-                csv_reader = csv.DictReader(csv_io)
-
-                updated_data = []
-                for row in csv_reader:
-                    index = int(row["index"])
-                    if index < len(self.collected_data):
-                        updated_data.append(self.collected_data[index])
-                    else:
-                        updated_data.append(row)
-
-                if len(self.collected_data) > len(updated_data):
-                    updated_data.extend(self.collected_data[len(updated_data):])
-
-                csv_io = io.StringIO()
-                fieldnames = ["index", "site", "link", "data", "hora", "valor"]
-                writer = csv.DictWriter(csv_io, fieldnames=fieldnames)
-
-                writer.writeheader()
-                for index, data in enumerate(updated_data):
-                    data["index"] = index
-                    writer.writerow(data)
-
-                csv_data = csv_io.getvalue()
-
-                # Envia o arquivo CSV atualizado para o bucket
-                minio_client.put_object(
-                    bucket_name,
-                    csv_file_path,
-                    io.BytesIO(csv_data.encode("utf-8")),
-                    len(csv_data),
-                    content_type="text/csv"
-                )
-                print("Arquivo CSV atualizado no bucket com sucesso!")
-                time.sleep(1)
-            except Exception as e:
-                print("Erro ao enviar o arquivo CSV para o bucket:", e)
-
+            except Exception as err:
+                self.logger.error("ERRO: ", err)
 
 
 if __name__ == "__main__":
     start_time = time.time()
 
-    # Cria o cliente Minio
+    # Configuração do cliente MinIO
     minio_client = Minio(
         endpoint="localhost:9000",
         access_key="minioadmin",
@@ -134,8 +109,14 @@ if __name__ == "__main__":
         secure=False,
     )
 
+    # Configuração do logging do Scrapy
+    from scrapy.utils.log import configure_logging
+
+    configure_logging()
+
+    # Executa o spider
     process = CrawlerProcess()
-    process.crawl(ProductSpider, start_urls=start_urls)
+    process.crawl(ProductSpider, start_urls=start_urls, minio_client=minio_client)
     process.start()
 
     # Conecta ao banco de dados
@@ -143,63 +124,41 @@ if __name__ == "__main__":
         host="localhost", database="produtos", user="admin", password="admin"
     )
 
-    # Cria uma tabela chamada 'produtos' com os atributos de cada coluna
+    # Cria uma tabela chamada 'produtos'
     cur = conn.cursor()
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS produtos (
             site TEXT,
             link TEXT,
-            data TEXT,
-            hora TEXT,
-            valor TEXT
+            data DATE,
+            hora TIME,
+            valor NUMERIC(10,2)
         )
         """
     )
-
     conn.commit()
 
-    # Lê o arquivo CSV diretamente do bucket
-    print("Lendo arquivo CSV do bucket:", bucket_name, csv_file_path)
-    obj = minio_client.get_object(bucket_name, csv_file_path)
-
-    try:
-        time.sleep(1)
-        csv_object = minio_client.get_object(bucket_name, csv_file_path)
-        csv_content = csv_object.data.decode("utf-8")
-
-        # Insere os dados no banco de dados
-        csv_io = io.StringIO(csv_content)
-        csv_reader = csv.DictReader(csv_io)
-
+    # Insere os dados no banco de dados
+    with open("dados-scrapy.csv", mode="r") as csv_file:
+        csv_reader = csv.DictReader(csv_file)
         for row in csv_reader:
-            site = row["site"]
-            link = row["link"]
-            data = row["data"]
-            hora = row["hora"]
-            valor = row["valor"]
-
-            # Verifica se a linha já existe na tabela utilizando a data e hora como filtro
+            valor = row["valor"].replace(",", ".")
             cur.execute(
-                "SELECT COUNT(*) FROM produtos WHERE data = %s AND hora = %s",
-                (data, hora),
+                """
+                INSERT INTO produtos (site, link, data, hora, valor)
+                VALUES (%s, %s, DATE %s, %s, %s)
+                """,
+                (row["site"], row["link"], row["data"], row["hora"], valor),
             )
-            result = cur.fetchone()
-
-            if result[0] == 0:
-                cur.execute(
-                    "INSERT INTO produtos (site, link, dat  a, hora, valor) VALUES (%s, %s, %s, %s, %s)",
-                    (site, link, data, hora, valor),
-                )
-
         conn.commit()
-        print("Dados inseridos no banco de dados com sucesso!")
-    except Exception as e:
-        print("Erro ao ler o arquivo CSV do bucket:", e)
-
 
     # Fecha a conexão com o banco de dados
     cur.close()
     conn.close()
 
-    print("Tempo de execução: %.2f segundos" % (time.time() - start_time))
+    end_time = time.time()
+
+    # Calcula o tempo total de execução
+    total_time = end_time - start_time
+    print(f"Tempo total de execução: {total_time} segundos")
