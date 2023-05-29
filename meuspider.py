@@ -131,9 +131,9 @@ if __name__ == "__main__":
         CREATE TABLE IF NOT EXISTS produtos (
             site TEXT,
             link TEXT,
-            data DATE,
-            hora TIME,
-            valor NUMERIC(10,2)
+            data TEXT,
+            hora TEXT,
+            valor TEXT
         )
         """
     )
