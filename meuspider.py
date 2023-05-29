@@ -44,7 +44,7 @@ class ProductSpider(scrapy.Spider):
             centavos_produto = response.css(
                 ".andes-money-amount__cents.andes-money-amount__cents--superscript-36::text"
             ).get()
-            preco_completo = str(preco_produto.replace(".", "") + "." + centavos_produto)
+            preco_completo = f"{preco_produto}.{centavos_produto}"
             print("Cheguei aqui 3")
         # Pega a data e hora atual
         data = datetime.datetime.now().strftime("%Y-%m-%d")
