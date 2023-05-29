@@ -108,6 +108,7 @@ if __name__ == "__main__":
         """
     )
     conn.commit()
+
     # Lê o arquivo CSV diretamente do bucket
     try:
         csv_object = minio_client.get_object(bucket_name, csv_file_path)
@@ -122,8 +123,8 @@ if __name__ == "__main__":
             data = row.get("data")
             hora = row.get("hora")
             print("link: ", link)
-            print("link: ", data)
-            print("link: ", hora)
+            print("data: ", data)
+            print("hora: ", hora)
 
             if link and data and hora:
                 # Verifica se a linha já existe na tabela utilizando a URL, data e hora como critério
