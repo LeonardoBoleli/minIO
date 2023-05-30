@@ -122,14 +122,18 @@ if __name__ == "__main__":
         csv_io = io.StringIO(csv_data)
         csv_reader = csv.DictReader(csv_io)
 
+        print("csv_io: ", csv_io)
+        print("csv_reader: ", csv_reader)
+        print("csv_data: ", csv_data)
+
         for row in csv_reader:
             # Insere os dados no banco de dados
             link = row.get("link")
             data = row.get("data")
             hora = row.get("hora")
-            print("link: ", link)
-            print("data: ", data)
-            print("hora: ", hora)
+            #print("link: ", link)
+            #print("data: ", data)
+            #print("hora: ", hora)
 
             if link and data and hora:
                 # Verifica se a linha já existe na tabela utilizando a URL, data e hora como critério
