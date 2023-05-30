@@ -126,6 +126,9 @@ if __name__ == "__main__":
         print("csv_reader: ", csv_reader)
         print("csv_data: ", csv_data)
 
+        print("Nomes das colunas:")
+        print(csv_reader.fieldnames)
+
         for row in csv_reader:
             # Insere os dados no banco de dados
             link = row.get("link")
