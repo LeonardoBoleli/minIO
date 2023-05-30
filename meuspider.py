@@ -123,9 +123,9 @@ if __name__ == "__main__":
         csv_reader = csv.reader(csv_io)
         rows = list(csv_reader)
 
-        print("csv_io: ", csv_io)
-        print("csv_reader: ", csv_reader)
-        print("csv_data: ", csv_data)
+        print("csv_io:", csv_io)
+        print("csv_reader:", csv_reader)
+        print("csv_data:", csv_data)
 
         # Verifica se o arquivo CSV possui pelo menos uma linha
         if csv_data:
@@ -145,49 +145,49 @@ if __name__ == "__main__":
             print("Nomes das colunas:")
             print(column_names)
 
-        for row in csv_reader:
-            # Insere os dados no banco de dados
-            link = row.get("link")
-            data = row.get("data")
-            hora = row.get("hora")
-            print("link: ", link)
-            print("data: ", data)
-            print("hora: ", hora)
+            for row in rows[1:]:
+                # Insere os dados no banco de dados
+                link = row[1]
+                data = row[2]
+                hora = row[3]
+                print("link:", link)
+                print("data:", data)
+                print("hora:", hora)
 
-            if link and data and hora:
-                # Verifica se a linha já existe na tabela utilizando a URL, data e hora como critério
-                cur.execute(
-                    """
-                    SELECT COUNT(*) FROM produtos WHERE link = %s AND data = %s AND hora = %s
-                    """,
-                    (link, data, hora),
-                )
-                count = cur.fetchone()[0]
-                print("count: ", count)
-
-                if count == 0:
-                    # Insere os dados no banco de dados
+                if link and data and hora:
+                    # Verifica se a linha já existe na tabela utilizando a URL, data e hora como critério
                     cur.execute(
                         """
-                        INSERT INTO produtos (site, link, data, hora, valor)
-                        VALUES (%s, %s, %s, %s, %s)
+                        SELECT COUNT(*) FROM produtos WHERE link = %s AND data = %s AND hora = %s
                         """,
-                        (row.get("site"), link, data, hora, row.get("valor")),
+                        (link, data, hora),
                     )
-                    print("Dados inseridos:", link, data, hora)
+                    count = cur.fetchone()[0]
+                    print("count:", count)
+
+                    if count == 0:
+                        # Insere os dados no banco de dados
+                        cur.execute(
+                            """
+                            INSERT INTO produtos (site, link, data, hora, valor)
+                            VALUES (%s, %s, %s, %s, %s)
+                            """,
+                            (row[0], link, data, hora, row[4]),
+                        )
+                        print("Dados inseridos:", link, data, hora)
 
         conn.commit()
         print("Dados do arquivo CSV inseridos no banco de dados com sucesso!")
     except Exception as err:
         print("Erro ao ler o arquivo CSV do bucket:", err)
+    finally:
+        # Fecha a conexão com o banco de dados
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
-
-
-
-    # Fecha a conexão com o banco de dados
-    cur.close()
-    conn.close()
-    end_time = time.time()
-    # Calcula o tempo total de execução
-    total_time = end_time - start_time
-    print(f"Tempo total de execução: {total_time} segundos")
+end_time = time.time()
+# Calcula o tempo total de execução
+total_time = end_time - start_time
+print(f"Tempo total de execução: {total_time} segundos")
