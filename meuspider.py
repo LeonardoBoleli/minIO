@@ -150,9 +150,9 @@ if __name__ == "__main__":
             link = row.get("link")
             data = row.get("data")
             hora = row.get("hora")
-            #print("link: ", link)
-            #print("data: ", data)
-            #print("hora: ", hora)
+            print("link: ", link)
+            print("data: ", data)
+            print("hora: ", hora)
 
             if link and data and hora:
                 # Verifica se a linha já existe na tabela utilizando a URL, data e hora como critério
