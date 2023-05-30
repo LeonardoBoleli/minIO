@@ -163,7 +163,6 @@ if __name__ == "__main__":
                         (link, data, hora),
                     )
                     count = cur.fetchone()[0]
-                    print("count:", count)
 
                     if count == 0:
                         # Insere os dados no banco de dados
