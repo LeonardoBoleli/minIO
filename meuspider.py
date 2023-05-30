@@ -120,14 +120,13 @@ if __name__ == "__main__":
                 print("Erro ao ler o arquivo CSV do bucket:", e)
 
         csv_io = io.StringIO(csv_data)
-        csv_reader = csv.DictReader(csv_io)
+        csv_reader = csv.reader(csv_io)
+        rows = list(csv_reader)
 
-        print("csv_io: ", csv_io)
-        print("csv_reader: ", csv_reader)
-        print("csv_data: ", csv_data)
-
-        print("Nomes das colunas:")
-        print(csv_reader.fieldnames)
+        # Verifica se o arquivo CSV não contém nenhuma linha
+        if len(rows) == 0:
+            # Adiciona os nomes das colunas na primeira linha
+            rows.append(["site", "link", "data", "hora", "valor"])
 
         for row in csv_reader:
             # Insere os dados no banco de dados
