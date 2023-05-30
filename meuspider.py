@@ -127,13 +127,39 @@ if __name__ == "__main__":
         print("csv_reader: ", csv_reader)
         print("csv_data: ", csv_data)
 
-        print("Nomes das colunas:")
-        print(csv_reader.fieldnames)
+        # Verifica se o arquivo CSV possui pelo menos uma linha
+        if csv_data:
+            # Divide o conteúdo do arquivo CSV em linhas
+            lines = csv_data.split("\n")
 
-        # Verifica se o arquivo CSV não contém nenhuma linha
+            # Verifica se existem linhas no arquivo
+            if len(lines) > 0:
+                # Obtém a primeira linha do arquivo CSV
+                first_line = lines[0]
+
+                # Separa os valores da primeira linha por vírgula (ou outro delimitador utilizado no arquivo)
+                column_names = first_line.split(",")
+
+                print("Nomes das colunas:")
+                print(column_names)
+
+         # Verifica se o arquivo CSV não contém nenhuma linha
         if len(rows) == 0:
             # Adiciona os nomes das colunas na primeira linha
             rows.append(["site", "link", "data", "hora", "valor"])
+
+            # Atualiza o conteúdo do arquivo CSV com a nova linha de nomes das colunas
+            csv_data = "\n".join([",".join(row) for row in rows])
+
+            # Envia o arquivo CSV atualizado para o bucket
+            minio_client.put_object(
+                bucket_name,
+                csv_file_path,
+                io.BytesIO(csv_data.encode("utf-8")),
+                len(csv_data),
+                content_type="text/csv"
+            )
+            print("Nomes das colunas adicionados ao arquivo CSV!")
 
         for row in csv_reader:
             # Insere os dados no banco de dados
