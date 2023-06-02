@@ -14,6 +14,20 @@ conn = psycopg2.connect(
 query = "SELECT * FROM produtos"
 data = pd.read_sql(query, conn)
 
+links = data['link'].tolist()
+
+# Limpeza dos links
+links_limpos = [link.strip() for link in links]
+for link in links_limpos:
+    print(link)
+    print(data.loc[data['link'] == link, 'valor'])
+
+# Remova os pontos da coluna "valor"
+data['valor'] = data['valor'].str.replace('.', '').str.replace(',', '.').astype(float)
+
+# Valor médio dos produtos por site
+valor_medio_por_site = data.groupby('site')['valor'].mean()
+
 # Filtra os valores dos outros componentes
 links_componentes = {
     "Processador": "https://produto.mercadolivre.com.br/MLB-2644395073-processador-intel-core-i7-10700-box-lga-1200-bx8070110700-_JM#position=11&search_layout=grid&type=item&tracking_id=a1976802-4bbe-4d4d-a00b-dfbda8b60ce9",
@@ -23,12 +37,11 @@ links_componentes = {
     "Memória RAM": "https://www.mercadolivre.com.br/memoria-ram-fury-color-preto-16gb-1-hyperx-hx426c16fb16/p/MLB14728888?pdp_filters=category:MLB1694#searchVariation=MLB14728888&position=8&search_layout=grid&type=product&tracking_id=b0b0bebf-c99d-42c0-b721-f62d1a64d3a1",
     "Water Cooler": "https://produto.mercadolivre.com.br/MLB-3381940936-water-cooler-corsair-h100-rgb-240mm-radiator-preto-_JM#position=6&search_layout=grid&type=item&tracking_id=137704c3-2bb1-4abe-8809-bd43e8c8f05d"
 }
-
 # Dicionário para armazenar os valores de cada componente
 valores_componentes = {}
 
 for componente, link in links_componentes.items():
-    if link in data['link'].values:
+    if link in links_limpos:
         valores = data.loc[data['link'] == link, 'valor'].tolist()
         valores_componentes[componente] = valores
     else:
