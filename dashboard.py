@@ -53,8 +53,10 @@ for componente, link in {
     if link in data['link'].tolist():
         valores = data.loc[data['link'] == link, 'valor'].tolist()
         valores_componentes[componente] = valores
+        
     else:
         print(f"Não há valores para o {componente}")
+        print("componente: ", link)
         print()
 
 # Imprime as informações no terminal
