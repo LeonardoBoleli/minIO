@@ -42,8 +42,8 @@ link_water_cooler = "https://produto.mercadolivre.com.br/MLB-3381940936-water-co
 valores_componentes = {}
 
 # Verifica se o link do processador está presente no DataFrame
-if link_processador in data['link'].tolist():
-    processador = data.loc[data['link'] == link_processador, 'valor'].tolist()
+if link_processador in links_limpos:
+    processador = data.loc[links_limpos == link_processador, 'valor'].tolist()
     valores_componentes["Processador"] = processador
 else:
     print("Não há valores para o processador")
@@ -57,8 +57,8 @@ for componente, link in {
     "Memória RAM": link_memoria_ram,
     "Water Cooler": link_water_cooler
 }.items():
-    if link in data['link'].tolist():
-        valores = data.loc[data['link'] == link, 'valor'].tolist()
+    if link in links_limpos:
+        valores = data.loc[links_limpos == link, 'valor'].tolist()
         valores_componentes[componente] = valores
         
     else:
