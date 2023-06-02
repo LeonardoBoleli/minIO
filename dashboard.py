@@ -15,7 +15,9 @@ conn = psycopg2.connect(
 query = "SELECT * FROM produtos"
 data = pd.read_sql(query, conn)
 
-# Manipula e analisa os dados conforme necessário
+print("Links recuperados do banco de dados:")
+print(data['link'].tolist())
+print()
 
 # Remova os pontos da coluna "valor"
 data['valor'] = data['valor'].str.replace('.', '').str.replace(',', '.').astype(float)
