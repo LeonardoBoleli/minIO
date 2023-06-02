@@ -150,9 +150,6 @@ if __name__ == "__main__":
                 link = row[1]
                 data = row[2]
                 hora = row[3]
-                print("link:", link)
-                print("data:", data)
-                print("hora:", hora)
 
                 if link and data and hora:
                     # Verifica se a linha já existe na tabela utilizando a URL, data e hora como critério
@@ -173,7 +170,6 @@ if __name__ == "__main__":
                             """,
                             (row[0], link, data, hora, row[4]),
                         )
-                        print("Dados inseridos:", link, data, hora)
 
         conn.commit()
         print("Dados do arquivo CSV inseridos no banco de dados com sucesso!")
