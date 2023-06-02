@@ -20,6 +20,7 @@ links = data['link'].tolist()
 links_limpos = [link.strip() for link in links]
 for link in links_limpos:
     print(link)
+    print(data.loc[data['link'] == link, 'valor'])
 
 # Remova os pontos da coluna "valor"
 data['valor'] = data['valor'].str.replace('.', '').str.replace(',', '.').astype(float)
