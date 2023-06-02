@@ -18,6 +18,8 @@ links = data['link'].tolist()
 
 # Limpeza dos links
 links_limpos = [link.strip() for link in links]
+for link in links_limpos:
+    print(link)
 
 # Remova os pontos da coluna "valor"
 data['valor'] = data['valor'].str.replace('.', '').str.replace(',', '.').astype(float)
@@ -36,16 +38,9 @@ link_water_cooler = "https://produto.mercadolivre.com.br/MLB-3381940936-water-co
 # Dicionário para armazenar os valores de cada componente
 valores_componentes = {}
 
-# Verifica se o link do processador está presente no DataFrame
-if link_processador in links_limpos:
-    processador = data.loc[data['link'] == link_processador, 'valor'].tolist()
-    valores_componentes["Processador"] = processador
-else:
-    print("Não há valores para o processador")
-    print()
-
 # Filtra os valores dos outros componentes
 for componente, link in {
+    "Processador": link_processador,
     "Gabinete": link_gabinete,
     "Placa de Vídeo": link_placa_de_video,
     "Placa Mãe": link_placa_mae,
