@@ -50,17 +50,31 @@ componentes = {
     "Water Cooler": water_cooler
 }
 
+# Dicionário para armazenar os valores de cada componente
+valores_componentes = {}
+
+# Itera sobre os componentes e obtém os valores
+for componente, link in componentes.items():
+    valores = data.loc[data['link'] == link, 'valor'].tolist()
+    valores = [valor.replace('.', '').replace(',', '.') for valor in valores]
+    valores = [float(valor) for valor in valores]
+    valores_componentes[componente] = valores
+
 # Imprime as informações de cada componente
-for componente, valores in componentes.items():
-    max_valor = np.max(valores)
-    min_valor = np.min(valores)
-    media_valor = np.mean(valores)
-    
-    print(f"Valores do componente {componente}:")
-    print("Máximo:", max_valor)
-    print("Mínimo:", min_valor)
-    print("Média:", media_valor)
-    print()
+for componente, valores in valores_componentes.items():
+    if len(valores) > 0:
+        max_valor = np.max(valores)
+        min_valor = np.min(valores)
+        media_valor = np.mean(valores)
+        
+        print(f"Valores do {componente}:")
+        print("Máximo:", max_valor)
+        print("Mínimo:", min_valor)
+        print("Média:", media_valor)
+        print()
+    else:
+        print(f"Não há valores para o {componente}")
+        print()
 
 # Fecha a conexão com o banco de dados
 conn.close()
