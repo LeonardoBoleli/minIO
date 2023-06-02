@@ -53,12 +53,26 @@ componentes = {
 # Dicionário para armazenar os valores de cada componente
 valores_componentes = {}
 
-# Itera sobre os componentes e obtém os valores
 for componente, link in componentes.items():
     valores = data.loc[data['link'] == link, 'valor'].tolist()
     valores = [valor.replace('.', '').replace(',', '.') for valor in valores]
     valores = [float(valor) for valor in valores]
     valores_componentes[componente] = valores
+
+    print(f"Valores do {componente}:")
+    print(valores)
+    print()
+
+# Verifica se o link do processador está presente no DataFrame
+if link_processador in data['link'].tolist():
+    processador = data.loc[data['link'] == link_processador, 'valor'].tolist()
+
+    print("Valores do processador:")
+    print(processador)
+    print()
+else:
+    print("Não há valores para o processador")
+    print()
 
 # Imprime as informações de cada componente
 for componente, valores in valores_componentes.items():
