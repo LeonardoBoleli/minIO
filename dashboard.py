@@ -47,14 +47,9 @@ for componente, link in {
     "Placa Mãe": link_placa_mae,
     "Memória RAM": link_memoria_ram,
     "Water Cooler": link_water_cooler
-}.items():
-    if link in links_limpos:
-        valores = data.loc[data['link'] == link, 'valor'].tolist()
-        valores_componentes[componente] = valores
-    else:
-        print(f"Não há valores para o {componente}")
-        print("Componente:", link)
-        print()
+}.items():    
+    valores = data.loc[data['link'] == link, 'valor'].tolist()
+    valores_componentes[componente] = valores    
 
 # Imprime as informações no terminal
 print("Dashboard")
