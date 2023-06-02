@@ -18,11 +18,12 @@ data = pd.read_sql(query, conn)
 links = data['link'].tolist()
 
 # Limpeza dos links
-links_limpos = [link.strip().replace('', '') for link in links]
+links_limpos = [link.strip() for link in links]
 
 print("Links recuperados do banco de dados:")
 print(links_limpos)
 print()
+
 
 # Remova os pontos da coluna "valor"
 data['valor'] = data['valor'].str.replace('.', '').str.replace(',', '.').astype(float)
