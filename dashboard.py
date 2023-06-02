@@ -1,6 +1,5 @@
 import psycopg2
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 
 # Conecta ao banco de dados
@@ -19,11 +18,6 @@ links = data['link'].tolist()
 
 # Limpeza dos links
 links_limpos = [link.strip() for link in links]
-
-print("Links recuperados do banco de dados:")
-print(links_limpos)
-print()
-
 
 # Remova os pontos da coluna "valor"
 data['valor'] = data['valor'].str.replace('.', '').str.replace(',', '.').astype(float)
@@ -44,7 +38,7 @@ valores_componentes = {}
 
 # Verifica se o link do processador está presente no DataFrame
 if link_processador in links_limpos:
-    processador = data.loc[links_limpos == link_processador, 'valor'].tolist()
+    processador = data.loc[data['link'] == link_processador, 'valor'].tolist()
     valores_componentes["Processador"] = processador
 else:
     print("Não há valores para o processador")
@@ -59,12 +53,11 @@ for componente, link in {
     "Water Cooler": link_water_cooler
 }.items():
     if link in links_limpos:
-        valores = data.loc[links_limpos == link, 'valor'].tolist()
+        valores = data.loc[data['link'] == link, 'valor'].tolist()
         valores_componentes[componente] = valores
-        
     else:
         print(f"Não há valores para o {componente}")
-        print("componente: ", link)
+        print("Componente:", link)
         print()
 
 # Imprime as informações no terminal
@@ -80,7 +73,7 @@ for componente, valores in valores_componentes.items():
         max_valor = np.max(valores)
         min_valor = np.min(valores)
         media_valor = np.mean(valores)
-        
+
         print("Máximo:", max_valor)
         print("Mínimo:", min_valor)
         print("Média:", media_valor)
