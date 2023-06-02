@@ -19,11 +19,12 @@ data = pd.read_sql(query, conn)
 # - Contagem de produtos por site
 produtos_por_site = data['site'].value_counts()
 
-# Converta a coluna "valor" para o tipo float
-data['valor'] = data['valor'].str.replace(',', '.').astype(float)
+# Remova os pontos da coluna "valor"
+data['valor'] = data['valor'].str.replace('.', '').str.replace(',', '.').astype(float)
 
 # Valor médio dos produtos por site
 valor_medio_por_site = data.groupby('site')['valor'].mean()
+
 
 # - Gráfico de barras dos produtos por site
 plt.figure(figsize=(8, 6))
