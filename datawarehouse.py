@@ -26,40 +26,34 @@ cur.execute(
 )
 conn.commit()
 
-# Obtém os dados do Datalake
-query = "SELECT * FROM produtos"
-data = pd.read_sql(query, conn)
+# Obtém os novos dados do Datalake
+new_data_query = "SELECT * FROM produtos"
+new_data = pd.read_sql(new_data_query, conn)
+
+# Obtém os dados existentes na tabela do Data Warehouse
+query = "SELECT * FROM warehouse"
+existing_data = pd.read_sql(query, conn)
 print("aqui deu bom")
 
-# Combina as colunas 'data' e 'hora' em uma nova coluna 'data_hora'
-data["data_hora"] = pd.to_datetime(data["data"] + " " + data["hora"])
-
-# Remove as colunas 'data' e 'hora'
-data = data.drop(["data", "hora"], axis=1)
-data["data"] = data["data"].astype(str)
-data["hora"] = data["hora"].astype(str)
+# Concatena os dados existentes com os novos dados
+data = pd.concat([existing_data, new_data], ignore_index=True)
 print("aqui deu bom 2")
 
-# Calcula os valores mínimos, médios e máximos para cada produto
-aggregated_data = data.groupby("produto").agg({"valor": ["min", "mean", "max"]})
-aggregated_data.columns = ["min_valor", "avg_valor", "max_valor"]
-aggregated_data.reset_index(inplace=True)
+# Converte as colunas de data e hora para string
+data["data"] = data["data"].astype(str)
+data["hora"] = data["hora"].astype(str)
 print("aqui deu bom 3")
-
-# Combina os dados com os valores agregados
-enriched_data = data.merge(aggregated_data, on="produto")
-print("aqui deu bom 4")
 
 # Insere os dados enriquecidos na tabela do Data Warehouse
 with conn.cursor() as cursor:
-    for row in enriched_data.itertuples(index=False):
+    for row in data.itertuples(index=False):
         insert_query = """
-            INSERT INTO warehouse (produto, valor, link, data_hora, data, hora, min_valor, avg_valor, max_valor)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+            INSERT INTO warehouse (produto, valor, link, data, hora, min_valor, avg_valor, max_valor)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         """
         cursor.execute(insert_query, row)
 conn.commit()
-print("aqui deu bom 5")
+print("aqui deu bom 4")
 
 # Fecha a conexão com o banco de dados
 conn.close()
