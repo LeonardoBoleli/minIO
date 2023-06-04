@@ -11,8 +11,6 @@ def get_product_stats(link):
         """
         cursor.execute(query, (link,))
         result = cursor.fetchone()
-        print("link: ", link)
-        print("result: ", result)
         min_valor, avg_valor, max_valor = result
         return min_valor, avg_valor, max_valor
 
@@ -81,7 +79,7 @@ with conn.cursor() as cursor:
         else:
             produto = "Outro Produto"
 
-        valor_produto = row.valor.replace(".", "").replace(",", ".")
+        valor_produto = row.valor
         hora, minuto, segundo = row.hora.split(":")
         ano, mes, dia = row.data.split("-")
         data_hora = f"{hora}:{minuto}:{segundo} - {dia}/{mes}/{ano}"
