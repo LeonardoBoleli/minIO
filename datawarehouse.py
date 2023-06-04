@@ -31,8 +31,11 @@ query = "SELECT * FROM produtos"
 data = pd.read_sql(query, conn)
 print("aqui deu bom")
 
-# Converte as colunas de data e hora para string
-data["data_hora"] = data["data_hora"].astype(str)
+# Combina as colunas 'data' e 'hora' em uma nova coluna 'data_hora'
+data["data_hora"] = pd.to_datetime(data["data"] + " " + data["hora"])
+
+# Remove as colunas 'data' e 'hora'
+data = data.drop(["data", "hora"], axis=1)
 data["data"] = data["data"].astype(str)
 data["hora"] = data["hora"].astype(str)
 print("aqui deu bom 2")
