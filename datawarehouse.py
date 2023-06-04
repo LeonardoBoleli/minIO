@@ -44,9 +44,15 @@ data["data"] = data["data"].astype(str)
 data["hora"] = data["hora"].astype(str)
 print("aqui deu bom 3")
 
+# Imprime o tipo de dados de uma coluna específica
+print(data["coluna"], ": ", data["coluna"].dtypes)
+
+
 # Insere os dados enriquecidos na tabela do Data Warehouse
 with conn.cursor() as cursor:
     for row in data.itertuples(index=False):
+        for value in row:
+            print(value, ": ", type(value))
         insert_query = """
             INSERT INTO warehouse (produto, valor, link, data, hora, min_valor, avg_valor, max_valor)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
