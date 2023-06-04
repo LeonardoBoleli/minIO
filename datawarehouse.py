@@ -8,7 +8,6 @@ def get_product_stats(link):
             SELECT MIN(valor::FLOAT), AVG(valor::FLOAT), MAX(valor::FLOAT)
             FROM produtos
             WHERE link = %s
-            ORDER BY ordem
         """
         cursor.execute(query, (link,))
         result = cursor.fetchone()
@@ -39,7 +38,7 @@ cur.execute(
 conn.commit()
 
 # Obtém os novos dados do Datalake
-new_data_query = "SELECT * FROM produtos ORDER BY ordem"
+new_data_query = "SELECT * FROM produtos"
 data = pd.read_sql(new_data_query, conn)
 
 # Dicionário para armazenar o valor e a data/hora da última linha de cada produto
@@ -99,9 +98,7 @@ for row in data.itertuples(index=False):
 
     # Verifica se já existe uma entrada para o produto na tabela warehouse
     with conn.cursor() as cursor:
-        cursor.execute(
-            "SELECT id FROM warehouse WHERE produto = %s ORDER BY ordem", (produto,)
-        )
+        cursor.execute("SELECT id FROM warehouse WHERE produto = %s", (produto,))
         existing_entry = cursor.fetchone()
 
         if existing_entry:
@@ -110,7 +107,6 @@ for row in data.itertuples(index=False):
                 UPDATE warehouse
                 SET ultimo_valor = %s, data_hora = %s, min_valor = %s, avg_valor = %s, max_valor = %s
                 WHERE id = %s
-                ORDER BY ordem
             """
 
             cursor.execute(
