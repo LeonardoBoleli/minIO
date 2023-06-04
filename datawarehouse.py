@@ -2,14 +2,14 @@ import psycopg2
 import pandas as pd
 
 
-def get_product_stats(product):
+def get_product_stats(link):
     with conn.cursor() as cursor:
         query = """
-            SELECT MIN(valor), AVG(valor), MAX(valor)
+            SELECT MIN(CAST(REPLACE(valor, '.', '') AS FLOAT)), AVG(CAST(REPLACE(valor, '.', '') AS FLOAT)), MAX(CAST(REPLACE(valor, '.', '') AS FLOAT))
             FROM produtos
-            WHERE produto = %s
+            WHERE link = %s
         """
-        cursor.execute(query, (product,))
+        cursor.execute(query, (link,))
         result = cursor.fetchone()
         min_valor, avg_valor, max_valor = result
         return min_valor, avg_valor, max_valor
