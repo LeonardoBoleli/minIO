@@ -11,6 +11,7 @@ def get_product_stats(link):
         """
         cursor.execute(query, (link,))
         result = cursor.fetchone()
+        print("result: ", result)
         min_valor, avg_valor, max_valor = result
         return min_valor, avg_valor, max_valor
 
