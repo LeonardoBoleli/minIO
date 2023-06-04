@@ -52,6 +52,7 @@ print(data["hora"], ": ", data["hora"].dtypes)
 # Insere os dados enriquecidos na tabela do Data Warehouse
 with conn.cursor() as cursor:
     for row in data.itertuples(index=False):
+        print("row: ", row)
         for value in row:
             print(value, ": ", type(value))
         insert_query = """
