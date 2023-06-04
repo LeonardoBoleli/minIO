@@ -45,7 +45,8 @@ data["hora"] = data["hora"].astype(str)
 print("aqui deu bom 3")
 
 # Imprime o tipo de dados de uma coluna específica
-print(data["coluna"], ": ", data["coluna"].dtypes)
+print(data["data"], ": ", data["data"].dtypes)
+print(data["hora"], ": ", data["hora"].dtypes)
 
 
 # Insere os dados enriquecidos na tabela do Data Warehouse
