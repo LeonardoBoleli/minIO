@@ -51,7 +51,7 @@ with conn.cursor() as cursor:
             INSERT INTO warehouse (produto, valor, link, data, hora, min_valor, avg_valor, max_valor)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         """
-        cursor.execute(insert_query, *row)
+        cursor.execute(insert_query, row)
 conn.commit()
 print("Inserção concluída com sucesso!")
 
