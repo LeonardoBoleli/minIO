@@ -79,7 +79,7 @@ with conn.cursor() as cursor:
         else:
             produto = "Outro Produto"
         valor_produto = row.valor.replace(".", "").replace(",", ".")
-        data_hora = f"{row.hora:%H:%M:%S} - {row.data:%d/%m/%Y}"
+        data_hora = f"{row.hora.strftime('%H:%M:%S')} - {row.data.strftime('%d/%m/%Y')}"
 
         # Obtém os valores estatísticos do produto até o momento
         min_valor, avg_valor, max_valor = get_product_stats(link)
