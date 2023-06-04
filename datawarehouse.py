@@ -7,7 +7,9 @@ conn = psycopg2.connect(
 )
 
 # Cria a tabela do Data Warehouse caso não exista
-create_table_query = """
+cur = conn.cursor()
+cur.execute(
+    """
     CREATE TABLE IF NOT EXISTS warehouse (
         id SERIAL PRIMARY KEY,
         produto VARCHAR(100),
@@ -20,9 +22,8 @@ create_table_query = """
         avg_valor FLOAT,
         max_valor FLOAT
     );
-"""
-with conn.cursor() as cursor:
-    cursor.execute(create_table_query)
+    """
+)
 conn.commit()
 
 # Obtém os dados do Datalake
