@@ -107,7 +107,7 @@ with conn.cursor() as cursor:
         data_hora = f"{row.data} {row.hora}"
 
         # Obtém os valores estatísticos do produto até o momento
-        min_valor, avg_valor, max_valor = get_product_stats(produto)
+        min_valor, avg_valor, max_valor = get_product_stats(link)
 
         # Resto do código para inserção na tabela
         insert_query = """
