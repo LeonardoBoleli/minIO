@@ -30,8 +30,6 @@ cur.execute(
         valor FLOAT,
         link VARCHAR,
         data_hora VARCHAR,
-        data VARCHAR,
-        hora VARCHAR,
         min_valor FLOAT,
         avg_valor FLOAT,
         max_valor FLOAT
@@ -47,29 +45,13 @@ new_data = pd.read_sql(new_data_query, conn)
 # Obtém os dados existentes na tabela do Data Warehouse
 query = "SELECT * FROM warehouse"
 existing_data = pd.read_sql(query, conn)
-print("aqui deu bom")
 
 # Concatena os dados existentes com os novos dados
 data = pd.concat([existing_data, new_data], ignore_index=True)
-print("aqui deu bom 2")
-
-# Converte as colunas de data e hora para string
-data["data"] = data["data"].astype(str)
-data["hora"] = data["hora"].astype(str)
-print("aqui deu bom 3")
-
-# Imprime o tipo de dados de uma coluna específica
-print(data["data"], ": ", data["data"].dtypes)
-print(data["hora"], ": ", data["hora"].dtypes)
-
 
 # Insere os dados enriquecidos na tabela do Data Warehouse
 with conn.cursor() as cursor:
     for row in data.itertuples(index=False):
-        print("row: ", row)
-        for column, value in row._asdict().items():
-            print(f"{column}: {value}")
-
         link = row.link
         if (
             "https://produto.mercadolivre.com.br/MLB-2644395073-processador-intel-core-i7-10700-box-lga-1200-bx8070110700-_JM"
@@ -104,7 +86,7 @@ with conn.cursor() as cursor:
         else:
             produto = "Outro Produto"
         valor_produto = row.valor.replace(".", "").replace(",", ".")
-        data_hora = f"{row.data} {row.hora}"
+        data_hora = f"{row.hora:%H:%M:%S} - {row.data:%d/%m/%Y}"
 
         # Obtém os valores estatísticos do produto até o momento
         min_valor, avg_valor, max_valor = get_product_stats(link)
@@ -117,7 +99,7 @@ with conn.cursor() as cursor:
             # Atualiza os valores para o produto existente
             update_query = """
                 UPDATE warehouse
-                SET valor = %s, link = %s, data_hora = %s, data = %s, hora = %s, min_valor = %s, avg_valor = %s, max_valor = %s
+                SET valor = %s, link = %s, data_hora = %s, min_valor = %s, avg_valor = %s, max_valor = %s
                 WHERE id = %s
             """
             cursor.execute(
@@ -126,8 +108,6 @@ with conn.cursor() as cursor:
                     valor_produto,
                     link,
                     data_hora,
-                    row.data,
-                    row.hora,
                     min_valor,
                     avg_valor,
                     max_valor,
@@ -137,8 +117,8 @@ with conn.cursor() as cursor:
         else:
             # Insere os dados para o novo produto
             insert_query = """
-                INSERT INTO warehouse (produto, valor, link, data_hora, data, hora, min_valor, avg_valor, max_valor)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO warehouse (produto, valor, link, data_hora, min_valor, avg_valor, max_valor)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
             cursor.execute(
                 insert_query,
@@ -147,8 +127,6 @@ with conn.cursor() as cursor:
                     valor_produto,
                     link,
                     data_hora,
-                    row.data,
-                    row.hora,
                     min_valor,
                     avg_valor,
                     max_valor,
@@ -157,7 +135,6 @@ with conn.cursor() as cursor:
 
 conn.commit()
 print("Inserção concluída com sucesso!")
-
 
 # Fecha a conexão com o banco de dados
 conn.close()
