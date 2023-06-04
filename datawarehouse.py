@@ -29,19 +29,23 @@ conn.commit()
 # Obtém os dados do Datalake
 query = "SELECT * FROM produtos"
 data = pd.read_sql(query, conn)
+print("aqui deu bom")
 
 # Converte as colunas de data e hora para string
 data["data_hora"] = data["data_hora"].astype(str)
 data["data"] = data["data"].astype(str)
 data["hora"] = data["hora"].astype(str)
+print("aqui deu bom 2")
 
 # Calcula os valores mínimos, médios e máximos para cada produto
 aggregated_data = data.groupby("produto").agg({"valor": ["min", "mean", "max"]})
 aggregated_data.columns = ["min_valor", "avg_valor", "max_valor"]
 aggregated_data.reset_index(inplace=True)
+print("aqui deu bom 3")
 
 # Combina os dados com os valores agregados
 enriched_data = data.merge(aggregated_data, on="produto")
+print("aqui deu bom 4")
 
 # Insere os dados enriquecidos na tabela do Data Warehouse
 with conn.cursor() as cursor:
@@ -52,6 +56,7 @@ with conn.cursor() as cursor:
         """
         cursor.execute(insert_query, row)
 conn.commit()
+print("aqui deu bom 5")
 
 # Fecha a conexão com o banco de dados
 conn.close()
