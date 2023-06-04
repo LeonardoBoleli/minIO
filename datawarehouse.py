@@ -80,7 +80,7 @@ with conn.cursor() as cursor:
             produto = "Outro Produto"
         valor_produto = row.valor.replace(".", "").replace(",", ".")
         hora, minuto, segundo = row.hora.split(":")
-        dia, mes, ano = row.data.split("-")
+        ano, mes, dia = row.data.split("-")
         data_hora = f"{hora}:{minuto}:{segundo} - {dia}/{mes}/{ano}"
 
         # Obtém os valores estatísticos do produto até o momento
