@@ -28,7 +28,6 @@ cur.execute(
         id SERIAL PRIMARY KEY,
         produto VARCHAR(100),
         valor FLOAT,
-        link VARCHAR,
         data_hora VARCHAR,
         min_valor FLOAT,
         avg_valor FLOAT,
@@ -94,14 +93,13 @@ with conn.cursor() as cursor:
             # Atualiza os valores para o produto existente
             update_query = """
                 UPDATE warehouse
-                SET valor = %s, link = %s, data_hora = %s, min_valor = %s, avg_valor = %s, max_valor = %s
+                SET valor = %s, data_hora = %s, min_valor = %s, avg_valor = %s, max_valor = %s
                 WHERE id = %s
             """
             cursor.execute(
                 update_query,
                 (
                     valor_produto,
-                    link,
                     data_hora,
                     min_valor,
                     avg_valor,
@@ -112,15 +110,14 @@ with conn.cursor() as cursor:
         else:
             # Insere os dados para o novo produto
             insert_query = """
-                INSERT INTO warehouse (produto, valor, link, data_hora, min_valor, avg_valor, max_valor)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO warehouse (produto, valor, data_hora, min_valor, avg_valor, max_valor)
+                VALUES (%s, %s, %s, %s, %s, %s)
             """
             cursor.execute(
                 insert_query,
                 (
                     produto,
                     valor_produto,
-                    link,
                     data_hora,
                     min_valor,
                     avg_valor,
