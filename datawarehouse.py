@@ -103,7 +103,7 @@ with conn.cursor() as cursor:
             produto = "Water Cooler"
         else:
             produto = "Outro Produto"
-
+        valor_produto = row.valor.replace(".", "").replace(",", ".")
         data_hora = f"{row.data} {row.hora}"
 
         # Obtém os valores estatísticos do produto até o momento
@@ -126,7 +126,7 @@ with conn.cursor() as cursor:
             insert_query,
             (
                 produto,
-                row.valor,
+                valor_produto,
                 link,
                 data_hora,
                 row.data,
