@@ -5,7 +5,7 @@ import pandas as pd
 def get_product_stats(link):
     with conn.cursor() as cursor:
         query = """
-            SELECT ROUND(MIN(REPLACE(valor, '.', '')::FLOAT), 2)::numeric, ROUND(AVG(REPLACE(valor, '.', '')::FLOAT), 2)::numeric, ROUND(MAX(REPLACE(valor, '.', '')::FLOAT), 2)::numeric
+            SELECT CAST(ROUND(MIN(REPLACE(valor, '.', '')::FLOAT), 2) AS NUMERIC), CAST(ROUND(AVG(REPLACE(valor, '.', '')::FLOAT), 2) AS NUMERIC), CAST(ROUND(MAX(REPLACE(valor, '.', '')::FLOAT), 2) AS NUMERIC)
             FROM produtos
             WHERE link = %s
         """
