@@ -53,9 +53,8 @@ print(data["hora"], ": ", data["hora"].dtypes)
 with conn.cursor() as cursor:
     for row in data.itertuples(index=False):
         print("row: ", row)
-        print("row 2: ", row.isnull().any())
-        for value in row:
-            print(value, ": ", type(value))
+        for column, value in row._asdict().items():
+            print(f"{column}: {value}")
         insert_query = """
             INSERT INTO warehouse (produto, valor, link, data, hora, min_valor, avg_valor, max_valor)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
@@ -63,6 +62,7 @@ with conn.cursor() as cursor:
         cursor.execute(insert_query, row)
 conn.commit()
 print("Inserção concluída com sucesso!")
+
 
 # Fecha a conexão com o banco de dados
 conn.close()
