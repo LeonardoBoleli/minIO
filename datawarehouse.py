@@ -109,33 +109,51 @@ with conn.cursor() as cursor:
         # Obtém os valores estatísticos do produto até o momento
         min_valor, avg_valor, max_valor = get_product_stats(link)
 
-        print("----------------------------------")
-        print("link: ", link)
-        print("produto: ", produto)
-        print("data_hora: ", data_hora)
-        print("min_valor: ", min_valor)
-        print("avg_valor: ", avg_valor)
-        print("max_valor: ", max_valor)
+        # Verifica se já existe uma entrada para o produto na tabela warehouse
+        cursor.execute("SELECT id FROM warehouse WHERE produto = %s", (produto,))
+        existing_entry = cursor.fetchone()
 
-        # Resto do código para inserção na tabela
-        insert_query = """
-            INSERT INTO warehouse (produto, valor, link, data_hora, data, hora, min_valor, avg_valor, max_valor)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
-        """
-        cursor.execute(
-            insert_query,
-            (
-                produto,
-                valor_produto,
-                link,
-                data_hora,
-                row.data,
-                row.hora,
-                min_valor,
-                avg_valor,
-                max_valor,
-            ),
-        )
+        if existing_entry:
+            # Atualiza os valores para o produto existente
+            update_query = """
+                UPDATE warehouse
+                SET valor = %s, link = %s, data_hora = %s, data = %s, hora = %s, min_valor = %s, avg_valor = %s, max_valor = %s
+                WHERE id = %s
+            """
+            cursor.execute(
+                update_query,
+                (
+                    valor_produto,
+                    link,
+                    data_hora,
+                    row.data,
+                    row.hora,
+                    min_valor,
+                    avg_valor,
+                    max_valor,
+                    existing_entry[0],
+                ),
+            )
+        else:
+            # Insere os dados para o novo produto
+            insert_query = """
+                INSERT INTO warehouse (produto, valor, link, data_hora, data, hora, min_valor, avg_valor, max_valor)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(
+                insert_query,
+                (
+                    produto,
+                    valor_produto,
+                    link,
+                    data_hora,
+                    row.data,
+                    row.hora,
+                    min_valor,
+                    avg_valor,
+                    max_valor,
+                ),
+            )
 
 conn.commit()
 print("Inserção concluída com sucesso!")
