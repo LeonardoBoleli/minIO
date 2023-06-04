@@ -109,6 +109,14 @@ with conn.cursor() as cursor:
         # Obtém os valores estatísticos do produto até o momento
         min_valor, avg_valor, max_valor = get_product_stats(link)
 
+        print("----------------------------------")
+        print("link: ", link)
+        print("produto: ", produto)
+        print("data_hora: ", data_hora)
+        print("min_valor: ", min_valor)
+        print("avg_valor: ", avg_valor)
+        print("max_valor: ", max_valor)
+
         # Resto do código para inserção na tabela
         insert_query = """
             INSERT INTO warehouse (produto, valor, link, data_hora, data, hora, min_valor, avg_valor, max_valor)
