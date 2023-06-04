@@ -87,6 +87,11 @@ with conn.cursor() as cursor:
         data_hora = f"{hora}:{minuto}:{segundo} - {dia}/{mes}/{ano}"
         # Obtém os valores estatísticos do produto até o momento
         min_valor, avg_valor, max_valor = get_product_stats(link)
+        min_valor, avg_valor, max_valor = (
+            round(min_valor, 2),
+            round(avg_valor, 2),
+            round(max_valor, 2),
+        )
 
         # Verifica se já existe uma entrada para o produto na tabela warehouse
         cursor.execute("SELECT id FROM warehouse WHERE produto = %s", (produto,))
