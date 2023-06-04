@@ -9,6 +9,7 @@ from minio import Minio
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 import warnings
+
 warnings.filterwarnings("ignore")
 start_urls = [
     "https://produto.mercadolivre.com.br/MLB-2644395073-processador-intel-core-i7-10700-box-lga-1200-bx8070110700-_JM#position=11&search_layout=grid&type=item&tracking_id=a1976802-4bbe-4d4d-a00b-dfbda8b60ce9",
@@ -16,15 +17,19 @@ start_urls = [
     "https://www.mercadolivre.com.br/placa-de-video-nvidia-galax-geforce-rtx-30-series-rtx-3060-36nsl8md6occ-oc-edition-8gb/p/MLB20736337?pdp_filters=category:MLB1658#searchVariation=MLB20736337&position=3&search_layout=grid&type=product&tracking_id=d3ba3a55-4cda-4a8e-8f88-fd6382009246",
     "https://produto.mercadolivre.com.br/MLB-1676543787-placa-me-asus-tuf-b460m-plus-b460-lga1200-ddr4-10a-ger-_JM#position=25&search_layout=grid&type=item&tracking_id=6f6be4a6-644a-43c2-8e5b-285259d18b1e",
     "https://www.mercadolivre.com.br/memoria-ram-fury-color-preto-16gb-1-hyperx-hx426c16fb16/p/MLB14728888?pdp_filters=category:MLB1694#searchVariation=MLB14728888&position=8&search_layout=grid&type=product&tracking_id=b0b0bebf-c99d-42c0-b721-f62d1a64d3a1",
-    "https://produto.mercadolivre.com.br/MLB-3381940936-water-cooler-corsair-h100-rgb-240mm-radiator-preto-_JM#position=6&search_layout=grid&type=item&tracking_id=137704c3-2bb1-4abe-8809-bd43e8c8f05d"
+    "https://produto.mercadolivre.com.br/MLB-3381940936-water-cooler-corsair-h100-rgb-240mm-radiator-preto-_JM#position=6&search_layout=grid&type=item&tracking_id=137704c3-2bb1-4abe-8809-bd43e8c8f05d",
 ]
 bucket_name = "meu-bucket"
 csv_file_path = "dados-scrapy.csv"
+
+
 class ProductSpider(scrapy.Spider):
     name = "product_spider"
+
     def __init__(self, *args, **kwargs):
         super(ProductSpider, self).__init__(*args, **kwargs)
         self.start_urls = kwargs.get("start_urls", [])
+
     def start_requests(self):
         for url in self.start_urls:
             yield scrapy.Request(
@@ -34,6 +39,7 @@ class ProductSpider(scrapy.Spider):
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
                 },
             )
+
     def parse(self, response):
         site = ""
         if "mercadolivre.com.br" in response.url:
@@ -42,6 +48,7 @@ class ProductSpider(scrapy.Spider):
             centavos_produto = response.css(
                 ".andes-money-amount__cents.andes-money-amount__cents--superscript-36::text"
             ).get()
+            preco_produto = preco_produto.replace(".", "")
             if centavos_produto:
                 preco_completo = f"{preco_produto}.{centavos_produto}"
             else:
@@ -54,7 +61,7 @@ class ProductSpider(scrapy.Spider):
         try:
             if not minio_client.bucket_exists(bucket_name):
                 minio_client.make_bucket(bucket_name)
-            
+
             # Lê o arquivo CSV do bucket, se existir
             csv_data = ""
             if minio_client.bucket_exists(bucket_name):
@@ -63,21 +70,23 @@ class ProductSpider(scrapy.Spider):
                     csv_data = obj.data.decode("utf-8")
                 except Exception as e:
                     print("Erro ao ler o arquivo CSV do bucket:", e)
-            
+
             # Atualiza o conteúdo do arquivo CSV com as novas informações
             csv_data += f"{site},{response.url},{data},{hora},{preco_completo}\n"
-            
+
             # Envia o arquivo CSV atualizado para o bucket
             minio_client.put_object(
                 bucket_name,
                 csv_file_path,
                 io.BytesIO(csv_data.encode("utf-8")),
                 len(csv_data),
-                content_type="text/csv"
+                content_type="text/csv",
             )
             print("Arquivo CSV atualizado no bucket com sucesso!")
         except Exception as e:
             print("Erro ao enviar o arquivo CSV para o bucket:", e)
+
+
 if __name__ == "__main__":
     start_time = time.time()
     # Cria o cliente Minio
@@ -131,7 +140,7 @@ if __name__ == "__main__":
         if csv_data:
             # Substitui a primeira linha do arquivo CSV pelos nomes de colunas desejados
             column_names = ["site", "link", "data", "hora", "valor"]
-            csv_data = ",".join(column_names) + csv_data[csv_data.find("\n"):]
+            csv_data = ",".join(column_names) + csv_data[csv_data.find("\n") :]
 
             # Divide o conteúdo do arquivo CSV em linhas
             lines = csv_data.split("\n")
