@@ -132,10 +132,6 @@ if __name__ == "__main__":
         csv_reader = csv.reader(csv_io)
         rows = list(csv_reader)
 
-        print("csv_io:", csv_io)
-        print("csv_reader:", csv_reader)
-        print("csv_data:", csv_data)
-
         # Verifica se o arquivo CSV possui pelo menos uma linha
         if csv_data:
             # Substitui a primeira linha do arquivo CSV pelos nomes de colunas desejados
