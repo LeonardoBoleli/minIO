@@ -5,7 +5,7 @@ import pandas as pd
 def get_product_stats(link):
     with conn.cursor() as cursor:
         query = """
-            SELECT MIN(CAST(REPLACE(valor, '.', '') AS FLOAT)), AVG(CAST(REPLACE(valor, '.', '') AS FLOAT)), MAX(CAST(REPLACE(valor, '.', '') AS FLOAT))
+            SELECT ROUND(MIN(REPLACE(valor, '.', '')::FLOAT), 2), ROUND(AVG(REPLACE(valor, '.', '')::FLOAT), 2), ROUND(MAX(REPLACE(valor, '.', '')::FLOAT), 2)
             FROM produtos
             WHERE link = %s
         """
@@ -52,43 +52,32 @@ with conn.cursor() as cursor:
             in link
         ):
             produto = "Processador"
-            # Obtém os valores estatísticos do produto até o momento
-            min_valor, avg_valor, max_valor = get_product_stats(link)
         elif (
             "https://www.mercadolivre.com.br/gabinete-gamer-lian-li-redragon-modelo-o11dynamic-mini-branc/p/MLB23190291?pdp_filters=category:MLB1696"
             in link
         ):
             produto = "Gabinete"
-            # Obtém os valores estatísticos do produto até o momento
-            min_valor, avg_valor, max_valor = get_product_stats(link)
         elif (
             "https://www.mercadolivre.com.br/placa-de-video-nvidia-galax-geforce-rtx-30-series-rtx-3060-36nsl8md6occ-oc-edition-8gb/p/MLB20736337?pdp_filters=category:MLB1658"
             in link
         ):
             produto = "Placa de Vídeo"
-            # Obtém os valores estatísticos do produto até o momento
-            min_valor, avg_valor, max_valor = get_product_stats(link)
         elif (
             "https://produto.mercadolivre.com.br/MLB-1676543787-placa-me-asus-tuf-b460m-plus-b460-lga1200-ddr4-10a-ger-_JM"
             in link
         ):
             produto = "Placa Mãe"
-            # Obtém os valores estatísticos do produto até o momento
-            min_valor, avg_valor, max_valor = get_product_stats(link)
         elif (
             "https://www.mercadolivre.com.br/memoria-ram-fury-color-preto-16gb-1-hyperx-hx426c16fb16/p/MLB14728888?pdp_filters=category:MLB1694"
             in link
         ):
             produto = "Memória RAM"
-            # Obtém os valores estatísticos do produto até o momento
-            min_valor, avg_valor, max_valor = get_product_stats(link)
         elif (
             "https://produto.mercadolivre.com.br/MLB-3381940936-water-cooler-corsair-h100-rgb-240mm-radiator-preto-_JM"
             in link
         ):
             produto = "Water Cooler"
-            # Obtém os valores estatísticos do produto até o momento
-            min_valor, avg_valor, max_valor = get_product_stats(link)
+
         else:
             produto = "Outro Produto"
 
@@ -96,6 +85,8 @@ with conn.cursor() as cursor:
         hora, minuto, segundo = row.hora.split(":")
         ano, mes, dia = row.data.split("-")
         data_hora = f"{hora}:{minuto}:{segundo} - {dia}/{mes}/{ano}"
+        # Obtém os valores estatísticos do produto até o momento
+        min_valor, avg_valor, max_valor = get_product_stats(link)
 
         # Verifica se já existe uma entrada para o produto na tabela warehouse
         cursor.execute("SELECT id FROM warehouse WHERE produto = %s", (produto,))
