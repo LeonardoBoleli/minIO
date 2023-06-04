@@ -40,14 +40,7 @@ conn.commit()
 
 # Obtém os novos dados do Datalake
 new_data_query = "SELECT * FROM produtos"
-new_data = pd.read_sql(new_data_query, conn)
-
-# Obtém os dados existentes na tabela do Data Warehouse
-query = "SELECT * FROM warehouse"
-existing_data = pd.read_sql(query, conn)
-
-# Concatena os dados existentes com os novos dados
-data = pd.concat([existing_data, new_data], ignore_index=True)
+data = pd.read_sql(new_data_query, conn)
 
 # Insere os dados enriquecidos na tabela do Data Warehouse
 with conn.cursor() as cursor:
