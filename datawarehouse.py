@@ -122,7 +122,21 @@ with conn.cursor() as cursor:
             INSERT INTO warehouse (produto, valor, link, data_hora, data, hora, min_valor, avg_valor, max_valor)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
         """
-        cursor.execute(insert_query, (produto, *row[1:6], data_hora, *row[6:]))
+        cursor.execute(
+            insert_query,
+            (
+                produto,
+                row.valor,
+                link,
+                data_hora,
+                row.data,
+                row.hora,
+                min_valor,
+                avg_valor,
+                max_valor,
+            ),
+        )
+
 conn.commit()
 print("Inserção concluída com sucesso!")
 
