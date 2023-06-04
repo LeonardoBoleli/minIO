@@ -53,6 +53,7 @@ print(data["hora"], ": ", data["hora"].dtypes)
 with conn.cursor() as cursor:
     for row in data.itertuples(index=False):
         print("row: ", row)
+        print("row 2: ", row.isnull().any())
         for value in row:
             print(value, ": ", type(value))
         insert_query = """
