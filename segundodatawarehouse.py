@@ -8,13 +8,14 @@ def get_product_stats(link, id):
             FROM produtos
             WHERE link = %s AND id < %s
         """
-        cursor.execute(query, (link, id))
+        cursor.execute(query, (link, int(id)))  # Conversão para inteiro
         result = cursor.fetchone()
         if result:
             min_valor, avg_valor, max_valor = result
             return min_valor, avg_valor, max_valor
         else:
             return 0, 0, 0
+
 
 
 # Conecta ao banco de dados
@@ -88,7 +89,8 @@ for row in data.itertuples(index=False):
     data_hora = f"{hora}:{minuto}:{segundo} - {dia}/{mes}/{ano}"
 
     # Obtém os valores estatísticos do produto até o momento
-    min_valor, avg_valor, max_valor = get_product_stats(link, row.id)
+    min_valor, avg_valor, max_valor = get_product_stats(link, int(row.id))  # Conversão para inteiro
+
     
     # Verifica se algum dos valores é igual a 0
     if min_valor != 0:
