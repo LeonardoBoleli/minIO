@@ -92,7 +92,7 @@ for row in data.itertuples(index=False):
     valor_produto = float(row.valor)
     hora, minuto, segundo = row.hora.split(":")
     ano, mes, dia = row.data.split("-")
-    data_hora = f"{ano}-{mes}-{dia} {hora}/{minuto}/{segundo}"
+    data_hora = f"{ano}-{mes}-{dia} {hora}:{minuto}:{segundo}"
 
     # Obtém os valores estatísticos do produto até o momento
     min_valor, avg_valor, max_valor = get_product_stats(
