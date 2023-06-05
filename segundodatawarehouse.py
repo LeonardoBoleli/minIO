@@ -124,12 +124,6 @@ for row in data.itertuples(index=False):
         ),
     )
 
-    # Atualiza os valores de min_valor, avg_valor e max_valor na tabela para a linha atual
-    cursor.execute(
-        "UPDATE segundo_warehouse SET min_valor = %s, avg_valor = %s, max_valor = %s WHERE produto = %s",
-        (min_valor, avg_valor, max_valor, produto),
-    )
-
 conn.commit()
 print("Inserção concluída com sucesso!")
 
