@@ -97,49 +97,23 @@ for row in data.itertuples(index=False):
         round(max_valor, 2),
     )
 
-    # Verifica se já existe uma entrada para o produto na tabela segundo_warehouse
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT id FROM segundo_warehouse WHERE produto = %s", (produto,))
-        existing_entry = cursor.fetchone()
-
-        if existing_entry:
-            # Atualiza os valores para o produto existente
-            update_query = """
-                UPDATE segundo_warehouse
-                SET ultimo_valor = %s, data_hora = %s, min_valor = %s, avg_valor = %s, max_valor = %s, valor_atual = %s
-                WHERE id = %s
-            """
-
-            cursor.execute(
-                update_query,
-                (
-                    valor_produto,
-                    data_hora,
-                    min_valor,
-                    avg_valor,
-                    max_valor,
-                    valor_produto,
-                    existing_entry[0],
-                ),
-            )
-        else:
-            # Insere os dados para o novo produto
-            insert_query = """
-                INSERT INTO segundo_warehouse (produto, ultimo_valor, data_hora, min_valor, avg_valor, max_valor, valor_atual)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """
-            cursor.execute(
-                insert_query,
-                (
-                    produto,
-                    valor_produto,
-                    data_hora,
-                    min_valor,
-                    avg_valor,
-                    max_valor,
-                    valor_produto,
-                ),
-            )
+    # Insere os dados para o novo produto
+    insert_query = """
+        INSERT INTO segundo_warehouse (produto, ultimo_valor, data_hora, min_valor, avg_valor, max_valor, valor_atual)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """
+    cursor.execute(
+        insert_query,
+        (
+            produto,
+            valor_produto,
+            data_hora,
+            min_valor,
+            avg_valor,
+            max_valor,
+            valor_produto,
+        ),
+    )
 
 # Atualiza os valores de valor_produto e data_hora com base no dicionário das últimas linhas
 for produto, (valor, data_hora) in ultimas_linhas.items():
