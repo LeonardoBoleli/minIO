@@ -6,7 +6,7 @@ def get_product_stats(link, id):
         query = """
             SELECT MIN(valor::FLOAT), AVG(valor::FLOAT), MAX(valor::FLOAT)
             FROM produtos
-            WHERE link = %s AND id < %s
+            WHERE link = %s AND id <= %s
         """
         cursor.execute(query, (link, id))
         result = cursor.fetchone()
