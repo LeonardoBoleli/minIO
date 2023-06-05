@@ -45,6 +45,9 @@ data = pd.read_sql(new_data_query, conn)
 # Dicionário para armazenar o valor e a data/hora da última linha de cada produto
 ultimas_linhas = {}
 
+# Cria o objeto cursor
+cursor = conn.cursor()
+
 # Itera sobre os dados do dataframe
 for row in data.itertuples(index=False):
     link = row.link
@@ -117,14 +120,16 @@ for row in data.itertuples(index=False):
 
 # Atualiza os valores de valor_produto e data_hora com base no dicionário das últimas linhas
 for produto, (valor, data_hora) in ultimas_linhas.items():
-    with conn.cursor() as cursor:
-        cursor.execute(
-            "UPDATE segundo_warehouse SET ultimo_valor = %s, data_hora = %s WHERE produto = %s",
-            (valor, data_hora, produto),
-        )
+    cursor.execute(
+        "UPDATE segundo_warehouse SET ultimo_valor = %s, data_hora = %s WHERE produto = %s",
+        (valor, data_hora, produto),
+    )
 
 conn.commit()
 print("Inserção concluída com sucesso!")
+
+# Fecha o cursor
+cursor.close()
 
 # Fecha a conexão com o banco de dados
 conn.close()
