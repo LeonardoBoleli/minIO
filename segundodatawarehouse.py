@@ -1,7 +1,6 @@
 import psycopg2
 import pandas as pd
 
-
 def get_product_stats(link):
     with conn.cursor() as cursor:
         query = """
@@ -27,12 +26,11 @@ cur.execute(
     CREATE TABLE IF NOT EXISTS segundo_warehouse (
         id SERIAL PRIMARY KEY,
         produto VARCHAR(100),
-        ultimo_valor FLOAT,
+        valor_atual FLOAT,
         data_hora VARCHAR,
         min_valor FLOAT,
         avg_valor FLOAT,
-        max_valor FLOAT,
-        valor_atual FLOAT
+        max_valor FLOAT
     );
     """
 )
@@ -44,9 +42,6 @@ data = pd.read_sql(new_data_query, conn)
 
 # Cria o objeto cursor
 cursor = conn.cursor()
-
-# Dicionário para armazenar o valor e a data/hora da última linha de cada produto
-ultimas_linhas = {}
 
 # Itera sobre os dados do dataframe
 for row in data.itertuples(index=False):
@@ -89,9 +84,6 @@ for row in data.itertuples(index=False):
     ano, mes, dia = row.data.split("-")
     data_hora = f"{hora}:{minuto}:{segundo} - {dia}/{mes}/{ano}"
 
-    # Atualiza o valor e a data/hora da última linha para o produto atual
-    ultimas_linhas[produto] = (valor_produto, data_hora)
-
     # Obtém os valores estatísticos do produto até o momento
     min_valor, avg_valor, max_valor = get_product_stats(link)
     min_valor, avg_valor, max_valor = (
@@ -102,8 +94,8 @@ for row in data.itertuples(index=False):
 
     # Insere os dados para o novo produto
     insert_query = """
-        INSERT INTO segundo_warehouse (produto, ultimo_valor, data_hora, min_valor, avg_valor, max_valor, valor_atual)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO segundo_warehouse (produto, valor_atual, data_hora, min_valor, avg_valor, max_valor)
+        VALUES (%s, %s, %s, %s, %s, %s)
     """
     cursor.execute(
         insert_query,
@@ -114,7 +106,6 @@ for row in data.itertuples(index=False):
             min_valor,
             avg_valor,
             max_valor,
-            valor_produto,
         ),
     )
 
@@ -122,13 +113,6 @@ for row in data.itertuples(index=False):
     cursor.execute(
         "UPDATE segundo_warehouse SET min_valor = %s, avg_valor = %s, max_valor = %s WHERE produto = %s",
         (min_valor, avg_valor, max_valor, produto),
-    )
-
-# Atualiza os valores de valor_produto e data_hora com base no dicionário das últimas linhas
-for produto, (valor, data_hora) in ultimas_linhas.items():
-    cursor.execute(
-        "UPDATE segundo_warehouse SET ultimo_valor = %s, data_hora = %s WHERE produto = %s",
-        (valor, data_hora, produto),
     )
 
 conn.commit()
