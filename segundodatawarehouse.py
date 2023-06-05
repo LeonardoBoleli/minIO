@@ -42,9 +42,6 @@ conn.commit()
 new_data_query = "SELECT * FROM produtos"
 data = pd.read_sql(new_data_query, conn)
 
-# Dicionário para armazenar o valor e a data/hora da última linha de cada produto
-ultimas_linhas = {}
-
 # Cria o objeto cursor
 cursor = conn.cursor()
 
@@ -116,6 +113,12 @@ for row in data.itertuples(index=False):
             max_valor,
             valor_produto,
         ),
+    )
+
+    # Atualiza os valores de min_valor, avg_valor e max_valor na tabela para a linha atual
+    cursor.execute(
+        "UPDATE segundo_warehouse SET min_valor = %s, avg_valor = %s, max_valor = %s WHERE produto = %s",
+        (min_valor, avg_valor, max_valor, produto),
     )
 
 # Atualiza os valores de valor_produto e data_hora com base no dicionário das últimas linhas
