@@ -10,6 +10,7 @@ def get_product_stats(link, id):
         """
         cursor.execute(query, (link, int(id)))  # Conversão para inteiro
         result = cursor.fetchone()
+        print("result: ", result)
         if result:
             min_valor, avg_valor, max_valor = result
             return min_valor, avg_valor, max_valor
