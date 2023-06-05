@@ -10,8 +10,11 @@ def get_product_stats(link, id):
         """
         cursor.execute(query, (link, id))
         result = cursor.fetchone()
-        min_valor, avg_valor, max_valor = result
-        return min_valor, avg_valor, max_valor
+        if result:
+            min_valor, avg_valor, max_valor = result
+            return min_valor, avg_valor, max_valor
+        else:
+            return 0, 0, 0
 
 
 # Conecta ao banco de dados
