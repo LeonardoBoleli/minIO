@@ -1,6 +1,7 @@
 import psycopg2
 import pandas as pd
 
+
 def get_product_stats(link, id):
     with conn.cursor() as cursor:
         query = """
@@ -21,8 +22,6 @@ def get_product_stats(link, id):
             return min_valor, avg_valor, max_valor
         else:
             return 0, 0, 0
-
-
 
 
 # Conecta ao banco de dados
@@ -93,12 +92,13 @@ for row in data.itertuples(index=False):
     valor_produto = float(row.valor)
     hora, minuto, segundo = row.hora.split(":")
     ano, mes, dia = row.data.split("-")
-    data_hora = f"{hora}:{minuto}:{segundo} - {dia}/{mes}/{ano}"
+    data_hora = f"{ano}-{mes}-{dia} {hora}/{minuto}/{segundo}"
 
     # Obtém os valores estatísticos do produto até o momento
-    min_valor, avg_valor, max_valor = get_product_stats(link, int(row.id))  # Conversão para inteiro
+    min_valor, avg_valor, max_valor = get_product_stats(
+        link, int(row.id)
+    )  # Conversão para inteiro
 
-    
     # Verifica se algum dos valores é igual a 0
     if min_valor != 0:
         min_valor = round(min_valor, 2)
