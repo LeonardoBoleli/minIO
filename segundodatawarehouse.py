@@ -89,11 +89,14 @@ for row in data.itertuples(index=False):
 
     # Obtém os valores estatísticos do produto até o momento
     min_valor, avg_valor, max_valor = get_product_stats(link, row.id)
-    min_valor, avg_valor, max_valor = (
-        round(min_valor, 2),
-        round(avg_valor, 2),
-        round(max_valor, 2),
-    )
+    
+    # Verifica se algum dos valores é igual a 0
+    if min_valor != 0:
+        min_valor = round(min_valor, 2)
+    if avg_valor != 0:
+        avg_valor = round(avg_valor, 2)
+    if max_valor != 0:
+        max_valor = round(max_valor, 2)
 
     # Insere os dados para o novo produto
     insert_query = """
