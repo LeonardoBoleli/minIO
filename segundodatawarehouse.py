@@ -20,18 +20,19 @@ conn = psycopg2.connect(
     host="localhost", database="produtos", user="admin", password="admin"
 )
 
-# Cria a tabela do Data Warehouse caso não exista
+# Cria a tabela do Data segundo_warehouse caso não exista
 cur = conn.cursor()
 cur.execute(
     """
-    CREATE TABLE IF NOT EXISTS warehouse (
+    CREATE TABLE IF NOT EXISTS segundo_warehouse (
         id SERIAL PRIMARY KEY,
         produto VARCHAR(100),
         ultimo_valor FLOAT,
         data_hora VARCHAR,
         min_valor FLOAT,
         avg_valor FLOAT,
-        max_valor FLOAT
+        max_valor FLOAT,
+        valor_atual FLOAT
     );
     """
 )
@@ -80,7 +81,7 @@ for row in data.itertuples(index=False):
     else:
         produto = "Outro Produto"
 
-    valor_produto = row.valor
+    valor_produto = float(row.valor)
     hora, minuto, segundo = row.hora.split(":")
     ano, mes, dia = row.data.split("-")
     data_hora = f"{hora}:{minuto}:{segundo} - {dia}/{mes}/{ano}"
@@ -96,16 +97,16 @@ for row in data.itertuples(index=False):
         round(max_valor, 2),
     )
 
-    # Verifica se já existe uma entrada para o produto na tabela warehouse
+    # Verifica se já existe uma entrada para o produto na tabela segundo_warehouse
     with conn.cursor() as cursor:
-        cursor.execute("SELECT id FROM warehouse WHERE produto = %s", (produto,))
+        cursor.execute("SELECT id FROM segundo_warehouse WHERE produto = %s", (produto,))
         existing_entry = cursor.fetchone()
 
         if existing_entry:
             # Atualiza os valores para o produto existente
             update_query = """
-                UPDATE warehouse
-                SET ultimo_valor = %s, data_hora = %s, min_valor = %s, avg_valor = %s, max_valor = %s
+                UPDATE segundo_warehouse
+                SET ultimo_valor = %s, data_hora = %s, min_valor = %s, avg_valor = %s, max_valor = %s, valor_atual = %s
                 WHERE id = %s
             """
 
@@ -117,14 +118,15 @@ for row in data.itertuples(index=False):
                     min_valor,
                     avg_valor,
                     max_valor,
+                    valor_produto,
                     existing_entry[0],
                 ),
             )
         else:
             # Insere os dados para o novo produto
             insert_query = """
-                INSERT INTO warehouse (produto, ultimo_valor, data_hora, min_valor, avg_valor, max_valor)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO segundo_warehouse (produto, ultimo_valor, data_hora, min_valor, avg_valor, max_valor, valor_atual)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
             cursor.execute(
                 insert_query,
@@ -135,6 +137,7 @@ for row in data.itertuples(index=False):
                     min_valor,
                     avg_valor,
                     max_valor,
+                    valor_produto,
                 ),
             )
 
@@ -142,7 +145,7 @@ for row in data.itertuples(index=False):
 for produto, (valor, data_hora) in ultimas_linhas.items():
     with conn.cursor() as cursor:
         cursor.execute(
-            "UPDATE warehouse SET ultimo_valor = %s, data_hora = %s WHERE produto = %s",
+            "UPDATE segundo_warehouse SET ultimo_valor = %s, data_hora = %s WHERE produto = %s",
             (valor, data_hora, produto),
         )
 
