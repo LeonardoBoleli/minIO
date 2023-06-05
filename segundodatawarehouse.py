@@ -45,6 +45,9 @@ data = pd.read_sql(new_data_query, conn)
 # Cria o objeto cursor
 cursor = conn.cursor()
 
+# Dicionário para armazenar o valor e a data/hora da última linha de cada produto
+ultimas_linhas = {}
+
 # Itera sobre os dados do dataframe
 for row in data.itertuples(index=False):
     link = row.link
