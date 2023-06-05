@@ -8,14 +8,20 @@ def get_product_stats(link, id):
             FROM produtos
             WHERE link = %s AND id < %s
         """
-        cursor.execute(query, (link, int(id)))  # Conversão para inteiro
+        cursor.execute(query, (link, id))
         result = cursor.fetchone()
-        print("result: ", result)
         if result:
             min_valor, avg_valor, max_valor = result
+            if min_valor is None:
+                min_valor = 0
+            if avg_valor is None:
+                avg_valor = 0
+            if max_valor is None:
+                max_valor = 0
             return min_valor, avg_valor, max_valor
         else:
             return 0, 0, 0
+
 
 
 
